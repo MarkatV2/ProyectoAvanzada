@@ -9,5 +9,5 @@ public class ProyectoApplication {
     }
 
     //Proyecto avanzada
-    //Crando Rama Majo
+    //Crando Rama Andres
 }
