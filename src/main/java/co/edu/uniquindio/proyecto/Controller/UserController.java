@@ -31,24 +31,7 @@ public class UserController {
 
     private final UserService userService;
 
-
     @GetMapping
-    @Operation(
-            summary = "Consultar múltiples usuarios (paginación)",
-            operationId = "getUsers",
-            security = @SecurityRequirement(name = "BearerAuth"),
-            parameters = {
-                    @Parameter(name = "page", in = ParameterIn.QUERY, schema = @Schema(type = "integer", minimum = "1", defaultValue = "1")),
-                    @Parameter(name = "size", in = ParameterIn.QUERY, schema = @Schema(type = "integer", minimum = "1", maximum = "100", defaultValue = "30"))
-            },
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida correctamente con paginación"),
-                    @ApiResponse(responseCode = "401", description = "No autorizado"),
-                    @ApiResponse(responseCode = "403", description = "Prohibido (sin permisos suficientes)"),
-                    @ApiResponse(responseCode = "500", description = "Error interno del servidor"),
-                    @ApiResponse(responseCode = "503", description = "Servicio no disponible")
-            }
-    )
     public ResponseEntity<PaginatedUserResponse> getUsers(
             @RequestParam(defaultValue = "1") @Positive(message = "La página debe ser un número positivo") int page,
             @RequestParam(defaultValue = "30") @Positive(message = "El tamaño debe ser un número positivo") int size){

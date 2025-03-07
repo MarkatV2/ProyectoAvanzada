@@ -11,13 +11,18 @@ public record UserUpdateRequest(
         @NotBlank(message = "El email es obligatorio")
         String email,
 
-        @Size(min = 8, max = 50, message = "La contraseña debe contener entre 8 y 50 carácteres")
-        @NotBlank(message = "La contraseña es obligatoria")
-        @NotNull(message = "La contraseña es obligatoria")
+        @Size(min = 8, max = 50, message = "El nombre debe contener entre 8 y 50 carácteres")
+        @NotBlank(message = "El nombre es obligatorio")
+        @NotNull(message = "El nombre es obligatoria")
         String fullName,
 
         @NotNull(message = "La fecha de nacimiento es obligatoria")
         @Past(message = "La fecha de nacimiento debe ser en el pasado")
-        LocalDate dateBirth
+        LocalDate dateBirth,
+
+        @NotBlank(message = "La ciudad de residencia es obligatoria")
+        @NotNull(message = "La ciudad de residencia es obligatoria")
+        String cityOfResidence
+
 ) {
 }

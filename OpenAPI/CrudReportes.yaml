@@ -1,0 +1,586 @@
+openapi: 3.0.3
+info:
+  title: API de Reportes - Seguridad Ciudadana
+  version: 1.0.0
+
+paths:
+  # ===== Crear Reporte =====
+  /reportes:
+    get:
+      tags: [ Reportes ]
+      summary: Obtener reportes cercanos verificados y no resueltos (con paginación)
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: latitud
+          in: query
+          required: true
+          schema:
+            type: number
+            example: 4.5390
+        - name: longitud
+          in: query
+          required: true
+          schema:
+            type: number
+            example: -75.6723
+        - name: radio
+          in: query
+          description: Radio de búsqueda en kilómetros
+          schema:
+            type: number
+            example: 5
+        - name: page
+          in: query
+          description: Número de página (comienza en 0)
+          schema:
+            type: integer
+            example: 0
+        - name: size
+          in: query
+          description: Cantidad de elementos por página
+          schema:
+            type: integer
+            example: 10
+      responses:
+        200:
+          description: Lista de reportes cercanos paginados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportePaginado"
+        400:
+          description: Faltan parámetros de ubicación o son inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Reportes]
+      summary: Crear un nuevo reporte
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                titulo:
+                  type: string
+                descripcion:
+                  type: string
+                categorias:
+                  type: array
+                  items:
+                    type: string
+                latitud:
+                  type: number
+                longitud:
+                  type: number
+                imagenes:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required: [titulo, descripcion, categorias, latitud, longitud]
+      responses:
+        201:
+          description: Reporte creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reporte"
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Permisos insuficientes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        409:
+          description: Conflicto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ===== Votar "Es importante" =====
+  /reportes/{id}/votos:
+    post:
+      tags: [Reportes]
+      summary: Añadir voto de prioridad a un reporte
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        201:
+          description: Voto registrado
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Permisos insuficientes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Reporte no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /reportes/{id}:
+    patch:
+      tags: [ Reportes ]
+      summary:
+        Actualizar el estado de un reporte (Restricciones Creador/Admin o solo Admin)
+      description: |
+        - **Creador o Admin**: Pueden cambiar el estado a **"ResueltoO"**.
+        - **Solo Admin**: Pueden cambiar a **"Verificado"** o **"Rechazado"**. Si el estado es **"Rechazado"**, se requiere un motivo.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/ActualizarEstadoResuelto"
+                - $ref: "#/components/schemas/ActualizarEstadoAdmin"
+              discriminator:
+                propertyName: estado
+      responses:
+        200:
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reporte"
+        400:
+          description: |
+            - Estado inválido (ejemplo: "Rechazado" sin motivo).
+            - Campos faltantes o formato incorrecto.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description:
+            Permisos insuficientes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Reporte no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        409:
+          description:
+            Transición de estado inválida (ejemplo resolver un reporte ya resuelto)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [ Reportes ]
+      summary: Actualizar un reporte existente (solo creador o admin)
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titulo:
+                  type: string
+                  example: "Bache reparado en la calle 10"
+                descripcion:
+                  type: string
+                  example: "El bache fue reparado por la alcaldía"
+                categorias:
+                  type: array
+                  items:
+                    type: string
+                  example: [ "65a1f3e8d4b8d4b8d4b8d4b9" ]
+              required: [ titulo, descripcion, categorias ]
+      responses:
+        200:
+          description: Reporte actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reporte"
+        400:
+          description: Campos inválidos o faltantes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Permisos insuficientes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Reporte no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Reportes]
+      summary: Eliminar un reporte (solo creador o admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Reporte eliminado
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Permisos insuficientes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Reporte no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [ Reportes ]
+      summary: Obtener detalles de un reporte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reporte"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Reporte no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # ===== Esquema de Reporte =====
+    # ===== Respuesta paginada =====
+    # ===== Esquemas para el cuerpo de la solicitud =====
+    ActualizarEstadoResuelto:
+      type: object
+      properties:
+        estado:
+          type: string
+          enum: [ Resuelto ]
+          example: "Resuelto"
+      required: [ estado ]
+
+    ActualizarEstadoAdmin:
+      type: object
+      properties:
+        estado:
+          type: string
+          enum: [ Verificado, Rechazado ]
+          example: "Rechazado"
+        motivo:
+          type: string
+          description: Obligatorio si el estado es "Rechazado"
+          example: "Reporte duplicado"
+      required:
+        - estado
+
+    ReportePaginado:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reporte"
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 10
+        totalElements:
+          type: integer
+          example: 15
+        totalPages:
+          type: integer
+          example: 2
+    Reporte:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4b8"
+        titulo:
+          type: string
+          example: "Robo en el parque central"
+        descripcion:
+          type: string
+          example: "Se observaron personas sospechosas..."
+        categorias:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoriaRef"
+        ubicacion:
+          $ref: "#/components/schemas/Ubicacion"
+        imagenes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImagenRef"
+        estado:
+          type: string
+          enum: [Pendiente, Verificado, Resuelto, Rechazado]
+          example: "Pendiente"
+        votosImportantes:
+          type: integer
+          example: 3
+        creadoPor:
+          $ref: "#/components/schemas/UsuarioRef"
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: "2024-01-20T08:30:00Z"
+      required: [titulo, descripcion, categorias, ubicacion]
+
+    # ===== Esquemas relacionados =====
+    Ubicacion:
+      type: object
+      properties:
+        latitud:
+          type: number
+          example: 4.5390
+        longitud:
+          type: number
+          example: -75.6723
+      required: [latitud, longitud]
+
+    CategoriaRef:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4b9"
+
+    ImagenRef:
+      type: object
+      properties:
+        url:
+          type: string
+          example: "https://res.cloudinary.com/demo/reporte_123.jpg"
+
+    UsuarioRef:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4c0"
+        nombre:
+          type: string
+          example: "Ana López"
+
+    # ===== Esquema de Error =====
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "CONFLICT_ERROR"
+        message:
+          type: string
+          example: "El reporte ya existe"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "titulo"
+              error:
+                type: string
+                example: "DUPLICATED"
+
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

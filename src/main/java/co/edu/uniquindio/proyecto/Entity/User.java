@@ -16,5 +16,8 @@ public class User {
     private LocalDate dateBirth;
     private LocalDate dateCreation;
     private Rol rol;
-    private EstadoCuenta estadoCuenta;
+    private AccountStatus accountStatus;
+    private String cityOfResidence;
+    private String address;
 }
+

@@ -1,6 +1,7 @@
 package co.edu.uniquindio.proyecto.DTO;
 
 import jakarta.validation.constraints.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
@@ -24,6 +25,12 @@ public record UserRegistration(
         String fullName,
 
         @NotNull(message = "La fecha de nacimiento es obligatoria")
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) // Formato esperado: yyyy-MM-dd
         @Past(message = "La fecha de nacimiento debe ser en el pasado")
-        LocalDate dateBirth
+        LocalDate dateBirth,
+
+
+        @NotNull(message = "La ciudad de residencia es obligatoria")
+        @NotBlank(message = "La ciudad de residencia es obligatoria")
+        String cityOfResidence
 ) {}

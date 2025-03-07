@@ -1,7 +1,7 @@
 package co.edu.uniquindio.proyecto.Service;
 
 import co.edu.uniquindio.proyecto.DTO.*;
-import co.edu.uniquindio.proyecto.Entity.EstadoCuenta;
+import co.edu.uniquindio.proyecto.Entity.AccountStatus;
 import co.edu.uniquindio.proyecto.Entity.Rol;
 import co.edu.uniquindio.proyecto.Entity.User;
 import co.edu.uniquindio.proyecto.Exception.EmailAlreadyExistsException;
@@ -72,7 +72,8 @@ public class UserService {
         user.setDateBirth(userRegistration.dateBirth());
         user.setDateCreation(LocalDate.now());
         user.setRol(Rol.USER);
-        user.setEstadoCuenta(EstadoCuenta.REGISTRADA);
+        user.setAccountStatus(AccountStatus.REGISTERED);
+        user.setCityOfResidence(userRegistration.cityOfResidence());
 
         try {
             // Guardar el usuario en la base de datos
@@ -110,6 +111,7 @@ public class UserService {
         // Actualizar los datos del usuario
         user.setEmail(userUpdateRequest.email());
         user.setFullName(userUpdateRequest.fullName());
+        user.setCityOfResidence(userUpdateRequest.cityOfResidence());
         user.setDateBirth(userUpdateRequest.dateBirth());
 
         // Guardar el usuario actualizado
@@ -119,7 +121,6 @@ public class UserService {
         // Convertir a UserResponse
         return mapToUserResponse(user);
     }
-
 
     @Transactional
     public SuccessResponse updateUserPassword(String id, PasswordUpdate passwordUpdate) {
@@ -149,16 +150,16 @@ public class UserService {
         log.warn("Intentando eliminar usuario con el id: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
-        user.setEstadoCuenta(EstadoCuenta.ELIMINADA);
+        user.setAccountStatus(AccountStatus.DELETED);
         userRepository.save(user);
         log.warn("Usuario con el id: {} eliminado exitosamente", id);
         return new SuccessResponse("Usuario eliminado exitosamente");
     }
 
-
     private UserResponse mapToUserResponse(User user) {
         return new UserResponse(user.getId(), user.getEmail(), user.getFullName(),
-                user.getDateBirth()
+                user.getDateBirth(), user.getAccountStatus().toString(),
+                user.getCityOfResidence()
         );
     }
 

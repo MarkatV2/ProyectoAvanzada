@@ -6,5 +6,7 @@ public record UserResponse(
         String id,
         String email,
         String fullName,
-        LocalDate dateBirth
+        LocalDate dateBirth,
+        String estadoCuenta,
+        String cityOfResidence
 ) {}
