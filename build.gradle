@@ -33,6 +33,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.security:spring-security-crypto'
     implementation 'org.mapstruct:mapstruct:1.6.3'
+    // Spring Boot Starter Mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    // JJWT para tokens JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 }
 tasks.named('test') {

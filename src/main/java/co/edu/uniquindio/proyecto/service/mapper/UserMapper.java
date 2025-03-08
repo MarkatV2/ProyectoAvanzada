@@ -26,6 +26,9 @@ public interface UserMapper {
     // Mapeo desde UserRegistration (nuevo)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "password", expression = "java(encodePassword(userRegistration.password(), passwordEncoder))")
+    @Mapping(target = "email", source = "email") // Mapeo explícito
+    @Mapping(target = "fullName", source = "fullName") // Mapeo explícito
+    @Mapping(target = "cityOfResidence", source = "cityOfResidence") // Mapeo explícito
     @Mapping(target = "dateCreation", expression = "java(LocalDate.now())")
     @Mapping(target = "rol", expression = "java(Rol.USER)")
     @Mapping(target = "accountStatus", expression = "java(AccountStatus.REGISTERED)")
