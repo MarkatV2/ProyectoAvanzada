@@ -1,0 +1,255 @@
+openapi: 3.0.3
+info:
+  title: API de Comentarios
+  version: 1.0.0
+
+paths:
+  # ===== Obtener comentarios de un reporte (GET) =====
+  /reportes/{reporteId}/comentarios:
+    get:
+      tags: [Comentarios]
+      summary: Obtener todos los comentarios de un reporte (paginados)
+      parameters:
+        - name: reporteId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4b8"
+        - name: page
+          in: query
+          description: Número de página (comienza en 0)
+          schema:
+            type: integer
+            example: 0
+        - name: size
+          in: query
+          description: Elementos por página
+          schema:
+            type: integer
+            example: 10
+      responses:
+        200:
+          description: Lista de comentarios paginados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComentarioPaginado"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Reporte no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    # ===== Crear comentario (POST) =====
+    post:
+      tags: [Comentarios]
+      summary: Agregar un comentario a un reporte
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: reporteId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComentarioRequest"
+      responses:
+        201:
+          description: Comentario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comentario"
+        400:
+          description: Contenido vacío o inválido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===== Eliminar comentario (DELETE) =====
+  /reportes/{reporteId}/comentarios/{comentarioId}:
+    delete:
+      tags: [Comentarios]
+      summary: Eliminar un comentario (solo creador o admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: reporteId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: comentarioId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Comentario eliminado
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Permisos insuficientes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Comentario o Reporte no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # ===== Esquema de Comentario =====
+    Comentario:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4c1"
+        contenido:
+          type: string
+          example: "Vi a los sospechosos cerca del parque ayer"
+        reporteId:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4b8"
+        usuario:
+          $ref: "#/components/schemas/UsuarioRef"
+        fecha:
+          type: string
+          format: date-time
+          example: "2024-01-20T10:30:00Z"
+
+    # ===== Solicitud de Comentario =====
+    ComentarioRequest:
+      type: object
+      properties:
+        contenido:
+          type: string
+          minLength: 1
+          example: "Vi a los sospechosos cerca del parque ayer"
+      required: [contenido]
+
+    # ===== Respuesta Paginada =====
+    ComentarioPaginado:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comentario"
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 10
+        totalElements:
+          type: integer
+          example: 15
+        totalPages:
+          type: integer
+          example: 2
+
+    # ===== Esquemas Reutilizables =====
+    UsuarioRef:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4c0"
+        nombre:
+          type: string
+          example: "Ana López"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "FORBIDDEN"
+        message:
+          type: string
+          example: "No tienes permisos para eliminar este comentario"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "comentarioId"
+              error:
+                type: string
+                example: "PERMISSION_DENIED"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  

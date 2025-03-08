@@ -1,0 +1,309 @@
+openapi: 3.0.3
+info:
+  title: API de Categorías - Plataforma de Seguridad Ciudadana
+  version: 1.0.0
+
+paths:
+  # ===== Listar categorías (GET) =====
+  /categorias:
+    get:
+      tags: [Categorías]
+      summary: Obtener todas las categorías activas
+      responses:
+        200:
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Categoria"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    # ===== Crear categoría (Admin) =====
+    post:
+      tags: [Categorías]
+      summary: Crear una nueva categoría (solo administradores)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoriaRequest"
+      responses:
+        201:
+          description: Categoría creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Categoria"
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Permisos insuficientes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        409:
+          description: Conflicto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+
+  # ===== Operaciones por ID de categoría =====
+  /categorias/{id}:
+    # ===== Obtener categoría por ID =====
+    get:
+      tags: [Categorías]
+      summary: Obtener detalles de una categoría
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Categoría encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Categoria"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+    # ===== Actualizar categoría (Admin) =====
+    put:
+      tags: [Categorías]
+      summary: Actualizar una categoría (solo administradores)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoriaRequest"
+      responses:
+        200:
+          description: Categoría actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Categoria"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Permisos insuficientes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        409:
+          description: Conflicto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    # ===== Eliminar categoría (Soft Delete - Admin) =====
+    delete:
+      tags: [Categorías]
+      summary: Eliminar una categoría (solo administradores)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Categoría marcada como inactiva
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: Permisos insuficientes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # ===== Esquema de Categoría =====
+    Categoria:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4b9"
+        nombre:
+          type: string
+          example: "Infraestructura"
+        descripcion:
+          type: string
+          example: "Problemas en vías públicas"
+        activo:
+          type: boolean
+          example: true
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: "2024-01-20T08:30:00Z"
+
+    # ===== Solicitud de Categoría =====
+    CategoriaRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: "Delitos"
+          minLength: 3
+        descripcion:
+          type: string
+          example: "Actividades delictivas"
+      required: [nombre]
+
+    # ===== Esquema de Error =====
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "CONFLICT"
+        message:
+          type: string
+          example: "Ya existe una categoría con este nombre"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "nombre"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

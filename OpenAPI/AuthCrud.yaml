@@ -1,0 +1,164 @@
+openapi: 3.0.3
+info:
+  title: API de Autenticación - Plataforma de Seguridad Ciudadana
+  version: 1.0.0
+
+paths:
+  # ===== Login =====
+  /auth/sessions:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión en la plataforma
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        200:
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Cuenta no activada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ===== Validar cuenta (activación) =====
+  /auth/activations:
+    get:
+      tags: [ Auth ]
+      summary: Validar una cuenta usando un token de activación
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        200:
+          description: Cuenta validada exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                    example: "Cuenta validada correctamente"
+        400:
+          description: Token inválido o expirado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        503:
+          description: Servicio no disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # ===== Solicitud de Login =====
+    LoginRequest:
+      type: object
+      properties:
+        correo:
+          type: string
+          format: email
+          example: "usuario@example.com"
+        contraseña:
+          type: string
+          example: "Password123!"
+      required: [correo, contraseña]
+
+    # ===== Respuesta de Login =====
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        usuario:
+          $ref: "#/components/schemas/UsuarioRef"
+
+    # ===== Esquema de Usuario Ref =====
+    UsuarioRef:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4c0"
+        nombre:
+          type: string
+          example: "Juan Pérez"
+        rol:
+          type: string
+          enum: [Cliente, Admin]
+          example: "Cliente"
+
+    # ===== Esquema de Error =====
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "UNAUTHORIZED"
+        message:
+          type: string
+          example: "Credenciales incorrectas"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "correo"
+              error:
+                type: string
+                example: "INVALID_CREDENTIALS"
