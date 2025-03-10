@@ -9,9 +9,7 @@ import co.edu.uniquindio.proyecto.entity.Rol;
 import co.edu.uniquindio.proyecto.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-
 import org.mapstruct.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDate;
 
 @Mapper(componentModel = "spring",
@@ -25,19 +23,13 @@ public interface UserMapper {
 
     // Mapeo desde UserRegistration (nuevo)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "password", expression = "java(encodePassword(userRegistration.password(), passwordEncoder))")
-    @Mapping(target = "email", source = "email") // Mapeo explícito
-    @Mapping(target = "fullName", source = "fullName") // Mapeo explícito
-    @Mapping(target = "cityOfResidence", source = "cityOfResidence") // Mapeo explícito
+    @Mapping(target = "password", expression = "java( new org.springframework.security.crypto.bcrypt." +
+            "BCryptPasswordEncoder().encode(userRegistration.password()) )")
     @Mapping(target = "dateCreation", expression = "java(LocalDate.now())")
     @Mapping(target = "rol", expression = "java(Rol.USER)")
     @Mapping(target = "accountStatus", expression = "java(AccountStatus.REGISTERED)")
-    User toUserEntity(UserRegistration userRegistration, @Context PasswordEncoder passwordEncoder);
+    User toUserEntity(UserRegistration userRegistration);
 
-    // Método default para reutilizar la lógica de encriptación
-    default String encodePassword(String rawPassword, @Context PasswordEncoder passwordEncoder) {
-        return passwordEncoder.encode(rawPassword);
-    }
 
     // Nuevo método para actualizar
     @Mapping(target = "id", ignore = true) // No se actualiza el ID
