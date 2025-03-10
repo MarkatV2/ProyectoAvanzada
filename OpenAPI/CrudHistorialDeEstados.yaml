@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: API de Historial de Estados
+  version: 1.0.0
+
+paths:
+  /historial-estados/{reporteId}:
+    get:
+      tags: [Historial de Estados]
+      summary: Obtener historial de estados de un reporte
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: reporteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Lista de cambios de estado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistorialEstado"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Reporte no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HistorialEstado:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4c3"
+        reporteId:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4b8"
+        estadoAnterior:
+          type: string
+          example: "Pendiente"
+        estadoNuevo:
+          type: string
+          example: "Verificado"
+        fechaCambio:
+          type: string
+          format: date-time
+          example: "2024-01-21T15:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "NOT_FOUND"
+        message:
+          type: string
+          example: "Historial de estados no encontrado"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

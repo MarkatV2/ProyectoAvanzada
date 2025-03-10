@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: API de Notificaciones
+  version: 1.0.0
+
+paths:
+  /notificaciones:
+    get:
+      tags: [Notificaciones]
+      summary: Obtener notificaciones del usuario autenticado
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Lista de notificaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notificacion"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /notificaciones/{id}:
+    delete:
+      tags: [Notificaciones]
+      summary: Eliminar una notificación
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Notificación eliminada correctamente
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Notificación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Notificacion:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4c2"
+        mensaje:
+          type: string
+          example: "Nuevo reporte cerca de tu ubicación"
+        leida:
+          type: boolean
+          example: false
+        fecha:
+          type: string
+          format: date-time
+          example: "2024-01-20T10:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "NOT_FOUND"
+        message:
+          type: string
+          example: "Notificación no encontrada"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

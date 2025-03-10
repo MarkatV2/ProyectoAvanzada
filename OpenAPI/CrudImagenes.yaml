@@ -1,0 +1,97 @@
+openapi: 3.0.3
+info:
+  title: API de Imágenes
+  version: 1.0.0
+
+paths:
+  /imagenes:
+    post:
+      tags: [Imágenes]
+      summary: Subir una imagen
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                imagen:
+                  type: string
+                  format: binary
+      responses:
+        201:
+          description: Imagen subida con éxito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Imagen"
+        400:
+          description: Imagen inválida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /imagenes/{id}:
+    delete:
+      tags: [Imágenes]
+      summary: Eliminar una imagen
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Imagen eliminada correctamente
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Imagen no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Imagen:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4c4"
+        url:
+          type: string
+          example: "https://res.cloudinary.com/demo/imagen_123.jpg"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "NOT_FOUND"
+        message:
+          type: string
+          example: "Imagen no encontrada"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

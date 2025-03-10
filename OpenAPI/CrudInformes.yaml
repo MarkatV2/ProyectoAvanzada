@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: API de Informes
+  version: 1.0.0
+
+paths:
+  /informes:
+    get:
+      tags: [Informes]
+      summary: Obtener informes de reportes por sector o categoría
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sector
+          in: query
+          required: false
+          schema:
+            type: string
+          example: "Centro"
+        - name: categoria
+          in: query
+          required: false
+          schema:
+            type: string
+          example: "Seguridad"
+        - name: fechaInicio
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2024-01-01"
+        - name: fechaFin
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2024-01-31"
+      responses:
+        200:
+          description: Informe generado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Informe"
+        400:
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Informe:
+      type: object
+      properties:
+        totalReportes:
+          type: integer
+          example: 25
+        categoria:
+          type: string
+          example: "Seguridad"
+        sector:
+          type: string
+          example: "Centro"
+        fechaInicio:
+          type: string
+          format: date
+          example: "2024-01-01"
+        fechaFin:
+          type: string
+          format: date
+          example: "2024-01-31"
+        detalles:
+          type: array
+          items:
+            type: string
+          example: ["Robo en la calle 5", "Accidente en la avenida principal"]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "INVALID_DATE_RANGE"
+        message:
+          type: string
+          example: "El rango de fechas no es válido"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
