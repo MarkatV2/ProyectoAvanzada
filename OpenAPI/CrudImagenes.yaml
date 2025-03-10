@@ -40,7 +40,112 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+    get:
+      tags: [Imágenes]
+      summary: Obtener la lista de imágenes almacenadas
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Lista de imágenes disponibles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Imagen"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /imagenes/{id}:
+    get:
+      tags: [Imágenes]
+      summary: Obtener una imagen por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Imagen encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Imagen"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Imagen no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags: [Imágenes]
+      summary: "Actualizar una imagen existente. Ejemplo: reemplazar imagen"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                imagen:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Imagen actualizada con éxito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Imagen"
+        400:
+          description: Imagen inválida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Imagen no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
     delete:
       tags: [Imágenes]
       summary: Eliminar una imagen
@@ -79,6 +184,11 @@ components:
         url:
           type: string
           example: "https://res.cloudinary.com/demo/imagen_123.jpg"
+        fechaSubida:
+          type: string
+          format: date-time
+          example: "2024-02-01T12:00:00Z"
+      required: [id, url, fechaSubida]
 
     ErrorResponse:
       type: object

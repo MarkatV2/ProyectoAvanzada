@@ -4,6 +4,38 @@ info:
   version: 1.0.0
 
 paths:
+  /historial-estados:
+    post:
+      tags: [Historial de Estados]
+      summary: Crear un nuevo registro en el historial de estados
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HistorialEstadoRequest"
+      responses:
+        201:
+          description: Registro creado en el historial de estados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistorialEstado"
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /historial-estados/{reporteId}:
     get:
       tags: [Historial de Estados]
@@ -38,6 +70,77 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /historial-estados/{id}:
+    put:
+      tags: [Historial de Estados]
+      summary: Actualizar un registro del historial de estados
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HistorialEstadoRequest"
+      responses:
+        200:
+          description: Registro actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistorialEstado"
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Registro no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags: [Historial de Estados]
+      summary: Eliminar un registro del historial de estados
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Registro eliminado correctamente
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Registro no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HistorialEstado:
@@ -59,6 +162,25 @@ components:
           type: string
           format: date-time
           example: "2024-01-21T15:30:00Z"
+      required: [reporteId, estadoAnterior, estadoNuevo, fechaCambio]
+
+    HistorialEstadoRequest:
+      type: object
+      properties:
+        reporteId:
+          type: string
+          example: "65a1f3e8d4b8d4b8d4b8d4b8"
+        estadoAnterior:
+          type: string
+          example: "Pendiente"
+        estadoNuevo:
+          type: string
+          example: "Verificado"
+        fechaCambio:
+          type: string
+          format: date-time
+          example: "2024-01-21T15:30:00Z"
+      required: [reporteId, estadoAnterior, estadoNuevo, fechaCambio]
 
     ErrorResponse:
       type: object

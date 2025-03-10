@@ -57,11 +57,132 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+    post:
+      tags: [Informes]
+      summary: Crear un nuevo informe
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Informe"
+      responses:
+        201:
+          description: Informe creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Informe"
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /informes/{id}:
+    get:
+      tags: [Informes]
+      summary: Obtener un informe por su ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      responses:
+        200:
+          description: Informe obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Informe"
+        404:
+          description: Informe no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags: [Informes]
+      summary: Actualizar un informe existente
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Informe"
+      responses:
+        200:
+          description: Informe actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Informe"
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Informe no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags: [Informes]
+      summary: Eliminar un informe por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      responses:
+        204:
+          description: Informe eliminado exitosamente
+        404:
+          description: Informe no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     Informe:
       type: object
       properties:
+        id:
+          type: string
+          example: "12345"
         totalReportes:
           type: integer
           example: 25

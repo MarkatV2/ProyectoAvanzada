@@ -2,6 +2,7 @@ openapi: 3.0.3
 info:
   title: API de Notificaciones
   version: 1.0.0
+  description: API para gestionar notificaciones de usuarios autenticados.
 
 paths:
   /notificaciones:
@@ -32,7 +33,118 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+    post:
+      tags: [Notificaciones]
+      summary: Crear una nueva notificación
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificacionInput"
+      responses:
+        201:
+          description: Notificación creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notificacion"
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /notificaciones/{id}:
+    get:
+      tags: [Notificaciones]
+      summary: Obtener una notificación por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Notificación obtenida correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notificacion"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Notificación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags: [Notificaciones]
+      summary: Actualizar una notificación (marcar como leída u otra modificación)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificacionUpdate"
+      responses:
+        200:
+          description: Notificación actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notificacion"
+        400:
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Notificación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
     delete:
       tags: [Notificaciones]
       summary: Eliminar una notificación
@@ -68,6 +180,9 @@ components:
         id:
           type: string
           example: "65a1f3e8d4b8d4b8d4b8d4c2"
+        usuarioId:
+          type: string
+          example: "user12345"
         mensaje:
           type: string
           example: "Nuevo reporte cerca de tu ubicación"
@@ -78,6 +193,26 @@ components:
           type: string
           format: date-time
           example: "2024-01-20T10:30:00Z"
+
+    NotificacionInput:
+      type: object
+      required:
+        - usuarioId
+        - mensaje
+      properties:
+        usuarioId:
+          type: string
+          example: "user12345"
+        mensaje:
+          type: string
+          example: "Nuevo reporte cerca de tu ubicación"
+
+    NotificacionUpdate:
+      type: object
+      properties:
+        leida:
+          type: boolean
+          example: true
 
     ErrorResponse:
       type: object
