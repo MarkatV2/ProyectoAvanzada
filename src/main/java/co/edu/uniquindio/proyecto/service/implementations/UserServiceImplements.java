@@ -80,7 +80,7 @@ public class UserServiceImplements implements UserService {
             User savedUser = userRepository.save(user);
             log.debug("Usuario registrado exitosamente: {}", savedUser.getEmail());
             log.info("Generando token de validación para el usuario: {} ...", savedUser.getEmail());
-            verificationService.generateAndSendVerificationToken(savedUser);
+            verificationService.generateAndSendCode(savedUser);
             // Convertir a UserResponse
             return userMapper.toUserResponse(savedUser);
         } catch (DataAccessException e) {

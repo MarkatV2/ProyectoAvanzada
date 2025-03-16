@@ -14,12 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final VerificationService verificationService;
-    private final UserServiceImplements userService;
 
-    @GetMapping("/sessions")
-    public ResponseEntity<String> verifyAccount(@RequestParam String token) {
+    @PatchMapping("/activations")
+    public ResponseEntity<String> verifyAccount(@RequestParam String code) {
         log.info("Solicitud de verificación de cuenta...");
-        verificationService.verifyToken(token);
+        verificationService.validateCode(code);
         return ResponseEntity.ok("Cuenta verificada exitosamente");
     }
 
