@@ -1,13 +1,13 @@
 package co.edu.uniquindio.proyecto.service.auth;
-
-import co.edu.uniquindio.proyecto.entity.AccountStatus;
-import co.edu.uniquindio.proyecto.entity.User;
-import co.edu.uniquindio.proyecto.entity.VerificationCode;
-import co.edu.uniquindio.proyecto.exception.InvalidTokenException;
-import co.edu.uniquindio.proyecto.exception.TokenExpiredException;
+import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
+import co.edu.uniquindio.proyecto.entity.user.User;
+import co.edu.uniquindio.proyecto.entity.auth.VerificationCode;
+import co.edu.uniquindio.proyecto.exception.InvalidCodeException;
+import co.edu.uniquindio.proyecto.exception.CodeExpiredException;
 import co.edu.uniquindio.proyecto.exception.UserNotFoundException;
 import co.edu.uniquindio.proyecto.repository.UserRepository;
 import co.edu.uniquindio.proyecto.repository.VerificationCodeRepository;
+import co.edu.uniquindio.proyecto.service.mapper.VerificationCodeMapper;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -16,11 +16,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Service
 @Slf4j
@@ -29,34 +27,29 @@ public class VerificationService {
     private final VerificationCodeRepository codeRepository;
     private final JavaMailSender mailSender;
     private final UserRepository userRepository;
-    private final JwtService jwtService;
     private final String verificationTemplate;
-    private static final int CODE_LENGTH = 6;
+    private final VerificationCodeMapper verificationCodeMapper;
     private static final int EXPIRATION_MINUTES = 15;
+
 
     @Autowired
     public VerificationService(
             VerificationCodeRepository codeRepository, JavaMailSender mailSender,
-            UserRepository userRepository,
-            JwtService jwtService,
+            UserRepository userRepository, VerificationCodeMapper verificationCodeMapper,
             @Value("#{@verificationEmailTemplate}") String verificationTemplate
     ) {
         this.codeRepository = codeRepository;
         this.mailSender = mailSender;
         this.userRepository = userRepository;
-        this.jwtService = jwtService;
+        this.verificationCodeMapper = verificationCodeMapper;
         this.verificationTemplate = verificationTemplate;
     }
 
 
     public void generateAndSendCode(User user) {
         String code = generateRandomCode();
-
-        VerificationCode verificationCode = new VerificationCode();
-        verificationCode.setCode(code);
-        verificationCode.setUserId(user.getId());
-        verificationCode.setCreatedAt(LocalDateTime.now());
-        verificationCode.setExpiresAt(LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES));
+        // Usa el mapper para crear el VerificationCode
+        VerificationCode verificationCode = verificationCodeMapper.toVerificationCode(code, user, EXPIRATION_MINUTES);
 
         codeRepository.save(verificationCode);
         sendVerificationEmail(user.getEmail(), code);
@@ -72,14 +65,15 @@ public class VerificationService {
         VerificationCode verificationCode = codeRepository.findByCode(code)
                 .orElseThrow(() -> {
                     log.warn("Código inválido: {}", code);
-                    return new InvalidTokenException("Código inválido");
+                    return new InvalidCodeException("Código inválido");
                 });
 
         log.debug("Código encontrado: {}, expiración: {}", code, verificationCode.getExpiresAt());
 
         if (LocalDateTime.now().isAfter(verificationCode.getExpiresAt())) {
             log.warn("El token ha expirado: {}", code);
-            throw new TokenExpiredException("El token ha expirado");
+            codeRepository.delete(verificationCode);
+            throw new CodeExpiredException("El token ha expirado");
         }
         validateUserAccount(verificationCode);
     }
@@ -93,7 +87,6 @@ public class VerificationService {
         user.setAccountStatus(AccountStatus.ACTIVATED);
         userRepository.save(user);
         log.info("Cuenta activada para el usuario con ID: {}", user.getId());
-
         codeRepository.delete(verificationCode);
         log.info("Token eliminado tras la activación: {}", verificationCode.getCode());
     }

@@ -1,7 +1,8 @@
 package co.edu.uniquindio.proyecto.controller;
 
 // UserController.java
-import co.edu.uniquindio.proyecto.dto.*;
+import co.edu.uniquindio.proyecto.dto.response.SuccessResponse;
+import co.edu.uniquindio.proyecto.dto.user.*;
 import co.edu.uniquindio.proyecto.service.implementations.UserServiceImplements;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -14,7 +15,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {

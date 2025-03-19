@@ -1,6 +1,7 @@
 package co.edu.uniquindio.proyecto.service.interfaces;
 
-import co.edu.uniquindio.proyecto.dto.*;
+import co.edu.uniquindio.proyecto.dto.response.SuccessResponse;
+import co.edu.uniquindio.proyecto.dto.user.*;
 
 public interface UserService {
 

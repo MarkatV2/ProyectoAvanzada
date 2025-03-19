@@ -1,12 +1,13 @@
 package co.edu.uniquindio.proyecto.service.mapper;
 
 
-import co.edu.uniquindio.proyecto.dto.UserRegistration;
-import co.edu.uniquindio.proyecto.dto.UserResponse;
-import co.edu.uniquindio.proyecto.dto.UserUpdateRequest;
-import co.edu.uniquindio.proyecto.entity.AccountStatus;
-import co.edu.uniquindio.proyecto.entity.Rol;
-import co.edu.uniquindio.proyecto.entity.User;
+import co.edu.uniquindio.proyecto.dto.user.UserRegistration;
+import co.edu.uniquindio.proyecto.dto.user.UserResponse;
+import co.edu.uniquindio.proyecto.dto.user.UserUpdateRequest;
+import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
+import co.edu.uniquindio.proyecto.entity.user.Rol;
+import co.edu.uniquindio.proyecto.entity.user.User;
+import org.bson.types.ObjectId;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.*;
@@ -19,7 +20,13 @@ public interface UserMapper {
 
     // Mapeo a UserResponse (existente)
     @Mapping(target = "accountStatus", expression = "java(user.getAccountStatus().toString())")
+    @Mapping(target = "id", source = "id", qualifiedByName = "objectIdToString")
     UserResponse toUserResponse(User user);
+
+    @Named("objectIdToString")
+    default String objectIdToString(ObjectId id) {
+        return id != null ? id.toString() : null;
+    }
 
     // Mapeo desde UserRegistration (nuevo)
     @Mapping(target = "id", ignore = true)

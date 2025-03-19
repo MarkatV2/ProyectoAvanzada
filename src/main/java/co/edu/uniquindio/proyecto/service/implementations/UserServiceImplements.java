@@ -1,8 +1,9 @@
 package co.edu.uniquindio.proyecto.service.implementations;
 
-import co.edu.uniquindio.proyecto.dto.*;
-import co.edu.uniquindio.proyecto.entity.AccountStatus;
-import co.edu.uniquindio.proyecto.entity.User;
+import co.edu.uniquindio.proyecto.dto.response.SuccessResponse;
+import co.edu.uniquindio.proyecto.dto.user.*;
+import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
+import co.edu.uniquindio.proyecto.entity.user.User;
 import co.edu.uniquindio.proyecto.exception.EmailAlreadyExistsException;
 import co.edu.uniquindio.proyecto.exception.InvalidPasswordException;
 import co.edu.uniquindio.proyecto.exception.ServiceUnavailableException;

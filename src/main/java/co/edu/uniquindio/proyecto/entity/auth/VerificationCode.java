@@ -1,6 +1,7 @@
-package co.edu.uniquindio.proyecto.entity;
+package co.edu.uniquindio.proyecto.entity.auth;
 
 import lombok.Data;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
@@ -11,13 +12,13 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 public class VerificationCode {
     @Id
-    private String id;
+    private ObjectId id;
 
     @Indexed(unique = true)
     private String code;
 
     @Field("user_id")
-    private String userId;
+    private ObjectId userId;
 
     @Field("created_at")
     private LocalDateTime createdAt;

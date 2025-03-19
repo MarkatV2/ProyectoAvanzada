@@ -1,10 +1,8 @@
 package co.edu.uniquindio.proyecto.exceptionhandler;
 
-import co.edu.uniquindio.proyecto.dto.ErrorResponse;
-import co.edu.uniquindio.proyecto.dto.ValidationErrorResponse;
-import co.edu.uniquindio.proyecto.exception.EmailAlreadyExistsException;
-import co.edu.uniquindio.proyecto.exception.InvalidPasswordException;
-import co.edu.uniquindio.proyecto.exception.UserNotFoundException;
+import co.edu.uniquindio.proyecto.dto.response.ErrorResponse;
+import co.edu.uniquindio.proyecto.dto.response.ValidationErrorResponse;
+import co.edu.uniquindio.proyecto.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -70,6 +68,19 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
     }
 
+    @ExceptionHandler(InvalidCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCodeException(InvalidCodeException ex, WebRequest request) {
+        log.error("Código de verificación invalido");
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(CodeExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleCodeExpiredException(CodeExpiredException ex, WebRequest request) {
+        log.error("Código de verificación expirado");
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<ValidationErrorResponse>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         // Extraer los errores de validación
@@ -87,6 +98,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errors);
+    }
+
+    // Maneja 409 - Conflicto (DuplicateCategoryException)
+    @ExceptionHandler(DuplicateCategoryException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateCategoryException(
+            DuplicateCategoryException ex, WebRequest request
+    ) {
+        log.error("Categoria Duplicada: {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
+    }
+
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCategoryNotFound(
+            CategoryNotFoundException ex, WebRequest request) {
+        log.error("Error al encontrar categoría: {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(IdInvalidException.class)
+    public ResponseEntity<ErrorResponse> handleIdInvalid(
+            CategoryNotFoundException ex, WebRequest request) {
+        log.error("Error de ID: {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(Exception ex, HttpStatus status, WebRequest request) {
