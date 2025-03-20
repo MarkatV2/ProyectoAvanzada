@@ -124,6 +124,21 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
+
+    @ExceptionHandler(ImageNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleImageNotFound(
+            CategoryNotFoundException ex, WebRequest request) {
+        log.error("Error al encontrar Imagen: {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(InvalidImageException.class)
+    public ResponseEntity<ErrorResponse> handleIdInvalidImage(
+            CategoryNotFoundException ex, WebRequest request) {
+        log.error("Error de imagen (Url no valida): {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(Exception ex, HttpStatus status, WebRequest request) {
         return new ResponseEntity<>(
                 new ErrorResponse(
