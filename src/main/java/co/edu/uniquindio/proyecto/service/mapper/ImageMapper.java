@@ -1,6 +1,7 @@
 package co.edu.uniquindio.proyecto.service.mapper;
 
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
+import co.edu.uniquindio.proyecto.dto.image.ImageUploadRequest;
 import co.edu.uniquindio.proyecto.entity.image.Image;
 import org.bson.types.ObjectId;
 import org.mapstruct.Mapper;
@@ -21,12 +22,16 @@ public interface ImageMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "uploadDate", expression = "java(java.time.LocalDateTime.now())")
-    Image toImage(String imageUrl);
+    @Mapping(target = "reportId", source = "reportId", qualifiedByName = "stringToObjectId")
+    Image toImage(ImageUploadRequest image);
 
     @Named("objectIdToString")
     default String objectIdToString(ObjectId id) {
         return id != null ? id.toString() : null;
     }
+
+    @Named("stringToObjectId")
+    default ObjectId StringToObjectId(String id){ return id != null ? new ObjectId(id) : null;}
 
 
 }

@@ -14,4 +14,5 @@ public class Image {
     ObjectId id;
     String imageUrl;
     LocalDateTime uploadDate;
+    ObjectId reportId;
 }

@@ -26,7 +26,12 @@ public record UserRegistration(
         @Past(message = "La fecha de nacimiento debe ser en el pasado")
         LocalDate dateBirth,
 
-
         @NotBlank(message = "La ciudad de residencia es obligatoria")
-        String cityOfResidence
+        String cityOfResidence,
+
+        @NotNull(message = "La latitud de la dirección es obligatoria")
+        double latitude,
+
+        @NotNull(message = "La longitud de la dirección es obligatoria")
+        double longitude
 ) {}

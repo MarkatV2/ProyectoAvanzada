@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class ImageController {
     private final ImageServiceImplements imageService;
 
     //METODO para obtener images por su ID
-    @GetMapping("/{imageId}")
+    @GetMapping("/{imageId}") //FALTA TODOS LOS HANDLER DE IMAGENES
     public ResponseEntity<ImageResponse> getImageById (@PathVariable String imageId){
         log.info("Iniciando búsqueda de Imagen ID: {}", imageId);
 
@@ -39,7 +40,7 @@ public class ImageController {
             @Valid @RequestBody ImageUploadRequest request) {
 
         log.info("Registrando nueva imagen desde URL: {}", request.imageUrl());
-        ImageResponse savedImage = imageService.registerImage(request.imageUrl());
+        ImageResponse savedImage = imageService.registerImage(request);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()

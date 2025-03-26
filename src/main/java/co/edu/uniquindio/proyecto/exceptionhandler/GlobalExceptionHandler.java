@@ -139,6 +139,21 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
+    @ExceptionHandler(DuplicateReportException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateReportException(
+            DuplicateCategoryException ex, WebRequest request
+    ) {
+        log.error("Reporte Duplicado: {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
+    }
+
+    @ExceptionHandler(ReportNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleReportNotFound(
+            CategoryNotFoundException ex, WebRequest request) {
+        log.error("Error al encontrar Imagen: {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
+    }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(Exception ex, HttpStatus status, WebRequest request) {
         return new ResponseEntity<>(
                 new ErrorResponse(

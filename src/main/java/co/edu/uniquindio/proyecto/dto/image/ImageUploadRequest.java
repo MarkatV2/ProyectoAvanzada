@@ -7,5 +7,7 @@ import jakarta.validation.constraints.Pattern;
 public record ImageUploadRequest(
         @NotBlank(message = "La URL de la imagen es obligatoria")
         @Pattern(regexp = "^(http|https)://res.cloudinary.com/.*", message = "URL de Cloudinary inválida")
-        String imageUrl
+        String imageUrl,
+        @NotBlank(message = "El id del reporte es obligatorio")
+        String reportId
 ) {}
