@@ -11,10 +11,11 @@ import org.mapstruct.ReportingPolicy;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 // Mapper actualizado
 @Mapper(componentModel = "spring",
-        imports = {LocalDate.class},
+        imports = {LocalDateTime.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ReportMapper {
 
@@ -23,7 +24,7 @@ public interface ReportMapper {
     @Mapping(target = "reportStatus", constant = "PENDING")
     @Mapping(target = "importantVotes", constant = "0")
     @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "dateCreation", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     Report toEntity(ReportRequest request);
 
 

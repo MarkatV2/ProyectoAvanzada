@@ -3,6 +3,9 @@ package co.edu.uniquindio.proyecto.exceptionhandler;
 import co.edu.uniquindio.proyecto.dto.response.ErrorResponse;
 import co.edu.uniquindio.proyecto.dto.response.ValidationErrorResponse;
 import co.edu.uniquindio.proyecto.exception.*;
+import co.edu.uniquindio.proyecto.exception.image.ImageNotFoundException;
+import co.edu.uniquindio.proyecto.exception.image.InvalidImageException;
+import com.mongodb.MongoSocketOpenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,7 +13,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.naming.ServiceUnavailableException;
 import java.time.LocalDateTime;
@@ -21,17 +23,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex,  WebRequest request) {
-        log.error("Usuario no encontrado: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
-    }
-
-    @ExceptionHandler(InvalidPasswordException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidPasswordException(InvalidPasswordException ex, WebRequest request) {
-        log.error("Contraseña actual incorrecta: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
-    }
 
     @ExceptionHandler(ServiceUnavailableException.class)
     public ResponseEntity<ErrorResponse> handleServiceUnavailable(ServiceUnavailableException ex, WebRequest request) {
@@ -44,41 +35,6 @@ public class GlobalExceptionHandler {
         log.error("Error interno: {}", ex.getMessage());
         return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     } */
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ValidationErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
-        // Crear la respuesta personalizada
-        ValidationErrorResponse error = new ValidationErrorResponse(
-                ex.getName(), // Nombre del parámetro
-                "El valor debe ser un número válido" // Mensaje de error
-        );
-
-        // Loggear el error
-        log.error("Error de tipo en parámetro: {}", error);
-
-        // Retornar la respuesta personalizada con código 400
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(error);
-    }
-
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex, WebRequest request) {
-        log.error("Error de correo ya registrado: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
-    }
-
-    @ExceptionHandler(InvalidCodeException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidCodeException(InvalidCodeException ex, WebRequest request) {
-        log.error("Código de verificación invalido");
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
-    }
-
-    @ExceptionHandler(CodeExpiredException.class)
-    public ResponseEntity<ErrorResponse> handleCodeExpiredException(CodeExpiredException ex, WebRequest request) {
-        log.error("Código de verificación expirado");
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
-    }
 
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -100,48 +56,18 @@ public class GlobalExceptionHandler {
                 .body(errors);
     }
 
-    // Maneja 409 - Conflicto (DuplicateCategoryException)
-    @ExceptionHandler(DuplicateCategoryException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateCategoryException(
-            DuplicateCategoryException ex, WebRequest request
-    ) {
-        log.error("Categoria Duplicada: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
-    }
-
-
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleCategoryNotFound(
-            CategoryNotFoundException ex, WebRequest request) {
-        log.error("Error al encontrar categoría: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
-    }
 
     @ExceptionHandler(IdInvalidException.class)
     public ResponseEntity<ErrorResponse> handleIdInvalid(
-            CategoryNotFoundException ex, WebRequest request) {
+            IdInvalidException ex, WebRequest request) {
         log.error("Error de ID: {}", ex.getMessage());
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
 
-    @ExceptionHandler(ImageNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleImageNotFound(
-            CategoryNotFoundException ex, WebRequest request) {
-        log.error("Error al encontrar Imagen: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
-    }
-
-    @ExceptionHandler(InvalidImageException.class)
-    public ResponseEntity<ErrorResponse> handleIdInvalidImage(
-            CategoryNotFoundException ex, WebRequest request) {
-        log.error("Error de imagen (Url no valida): {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
-    }
-
     @ExceptionHandler(DuplicateReportException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateReportException(
-            DuplicateCategoryException ex, WebRequest request
+            DuplicateReportException ex, WebRequest request
     ) {
         log.error("Reporte Duplicado: {}", ex.getMessage());
         return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
@@ -149,10 +75,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ReportNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleReportNotFound(
-            CategoryNotFoundException ex, WebRequest request) {
+            ReportNotFoundException ex, WebRequest request) {
         log.error("Error al encontrar Imagen: {}", ex.getMessage());
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
     }
+
+
+
+
+    @ExceptionHandler(MongoSocketOpenException.class) //Esto debe ir en el seguridad tambien
+    public ResponseEntity<ErrorResponse> handleAccountInvalid(
+            MongoSocketOpenException ex, WebRequest request) {
+        log.error("Error al conectarse en la base de datos {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.SERVICE_UNAVAILABLE, request);
+    }
+
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(Exception ex, HttpStatus status, WebRequest request) {
         return new ResponseEntity<>(
@@ -160,10 +97,8 @@ public class GlobalExceptionHandler {
                         LocalDateTime.now(),
                         ex.getMessage(),
                         status.getReasonPhrase(),
-                        request.getDescription(false)
-                ),
-                status
-        );
+                        request.getDescription(false),
+                        status.value()), status);
     }
 
 

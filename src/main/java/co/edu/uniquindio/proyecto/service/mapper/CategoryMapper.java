@@ -16,18 +16,18 @@ import java.time.LocalDateTime;
 public interface CategoryMapper {
 
     @Mapping(target = "id", source = "id", qualifiedByName = "objectIdToString")
-    @Mapping(target = "dateCreation", dateFormat = "yyyy-MM-dd'T'HH:mm:ss")
+    @Mapping(target = "createdAt", dateFormat = "yyyy-MM-dd'T'HH:mm:ss")
     CategoryResponse toCategoryResponse(Category category);
 
     // Nuevo método para actualización
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "dateCreation", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "activated", ignore = true)
     void updateCategoryFromRequest(CategoryRequest request, @MappingTarget Category category);
 
     @Mapping(target = "id", ignore = true) // MongoDB generará el ID
     @Mapping(target = "activated", constant = "true")
-    @Mapping(target = "dateCreation", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     Category toEntity(CategoryRequest request);
 
     @Named("objectIdToString")

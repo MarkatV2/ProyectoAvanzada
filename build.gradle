@@ -36,12 +36,15 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     // Spring Boot Starter Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-    // JJWT para tokens JWT
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    // Para Java 21
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.1'
 }
 tasks.named('test') {
     useJUnitPlatform()

@@ -13,8 +13,8 @@ public interface CommentMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "reportId", source = "reportId", qualifiedByName = "StringToObjectId")
-    @Mapping(target = "reportId", source = "userId", qualifiedByName = "StringToObjectId")
+    @Mapping(target = "reportId", source = "reportId", qualifiedByName = "stringToObjectId")
+    @Mapping(target = "userId", source = "userId", qualifiedByName = "stringToObjectId")
     Comment toEntity(CommentRequest request, String reportId, String userId, String userName);
 
     @Mapping(target = "id", expression = "java(entity.getId().toString())")
@@ -23,5 +23,5 @@ public interface CommentMapper {
     CommentResponse toResponse(Comment entity);
 
     @Named("stringToObjectId")
-    default ObjectId StringToObjectId(String id){ return id != null ? new ObjectId(id) : null;}
+    default ObjectId stringToObjectId(String id){ return id != null ? new ObjectId(id) : null;}
 }

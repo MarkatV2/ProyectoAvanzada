@@ -21,8 +21,10 @@ public class Report {
     private String title;
     private String description;
     private List<CategoryRef> categoryList;
+
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
+
     private ReportStatus reportStatus;
     private int importantVotes;
     private ObjectId userId;

@@ -8,5 +8,7 @@ public record UserResponse(
         String fullName,
         LocalDate dateBirth,
         String accountStatus,
-        String cityOfResidence
+        String cityOfResidence,
+        double latitude,
+        double longitude
 ) {}
