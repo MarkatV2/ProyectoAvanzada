@@ -4,10 +4,7 @@ import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
 import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import org.bson.types.ObjectId;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 import java.time.LocalDate;
@@ -29,10 +26,19 @@ public interface ReportMapper {
 
 
     @Mapping(target = "id", source = "id", qualifiedByName = "objectIdToString")
-    @Mapping(target = "userId", source = "userId", qualifiedByName = "objectIdToString")
     @Mapping(target = "latitude", source = "location.y")
     @Mapping(target = "longitude", source = "location.x")
     ReportResponse toResponse(Report report);
+
+    // Actualización parcial (ignora campos sensibles)
+    @Mapping(target = "location", ignore = true)
+    @Mapping(target = "reportStatus", ignore = true)
+    @Mapping(target = "importantVotes", ignore = true)
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    void updateEntity(@MappingTarget Report report, ReportRequest request);
+
 
     @Named("objectIdToString")
     default String objectIdToString(ObjectId id) {

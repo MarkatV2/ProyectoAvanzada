@@ -2,7 +2,9 @@ package co.edu.uniquindio.proyecto.controller;
 
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageUploadRequest;
+import co.edu.uniquindio.proyecto.entity.image.Image;
 import co.edu.uniquindio.proyecto.service.implementations.ImageServiceImplements;
+import co.edu.uniquindio.proyecto.annotation.CheckOwnerOrAdmin;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,10 +71,13 @@ public class ImageController {
      * @return ResponseEntity sin contenido, con código HTTP 204.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deactivateImage(@PathVariable String id) {
+    @CheckOwnerOrAdmin(entityClass = Image.class)
+     public ResponseEntity<Void> deactivateImage(@PathVariable String id) {
         log.info("Iniciando eliminación de imagen con ID: {}", id);
         imageService.deleteImage(id);
         log.info("Imagen con ID: {} eliminada exitosamente", id);
         return ResponseEntity.noContent().build();
     }
+
+
 }

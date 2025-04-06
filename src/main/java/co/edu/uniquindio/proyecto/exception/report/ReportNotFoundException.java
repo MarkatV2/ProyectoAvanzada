@@ -1,4 +1,4 @@
-package co.edu.uniquindio.proyecto.exception;
+package co.edu.uniquindio.proyecto.exception.report;
 
 // Excepción personalizada
 public class ReportNotFoundException extends RuntimeException {

@@ -96,4 +96,30 @@ public class SecurityUtils {
         }
         return hasRole;
     }
+
+    /**
+     * Obtiene el nombre de usuario (username) del usuario autenticado a partir del JWT.
+     *
+     * @return El username extraído del JWT o {@code null} si no se encuentra.
+     */
+    public String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (log.isDebugEnabled()) {
+            log.debug("Obteniendo autenticación actual para username: {}", authentication);
+        }
+        if (authentication == null) {
+            log.warn("No se encontró autenticación en el contexto de seguridad.");
+            return null;
+        }
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            String username = jwt.getSubject(); // El subject generalmente contiene el username
+            if (log.isDebugEnabled()) {
+                log.debug("Username extraído del JWT: {}", username);
+            }
+            return username;
+        }
+        log.warn("El principal de la autenticación no es una instancia de Jwt: {}", authentication.getPrincipal());
+        return null;
+    }
+
 }

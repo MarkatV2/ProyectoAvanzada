@@ -6,7 +6,7 @@ import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
 import co.edu.uniquindio.proyecto.entity.user.User;
 import co.edu.uniquindio.proyecto.exception.user.EmailAlreadyExistsException;
 import co.edu.uniquindio.proyecto.exception.user.InvalidPasswordException;
-import co.edu.uniquindio.proyecto.exception.ServiceUnavailableException;
+import co.edu.uniquindio.proyecto.exception.global.ServiceUnavailableException;
 import co.edu.uniquindio.proyecto.exception.user.UserNotFoundException;
 import co.edu.uniquindio.proyecto.repository.UserRepository;
 import co.edu.uniquindio.proyecto.service.auth.VerificationService;

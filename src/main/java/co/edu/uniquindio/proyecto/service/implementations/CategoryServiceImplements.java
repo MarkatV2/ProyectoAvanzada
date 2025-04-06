@@ -5,7 +5,7 @@ import co.edu.uniquindio.proyecto.dto.category.CategoryResponse;
 import co.edu.uniquindio.proyecto.entity.category.Category;
 import co.edu.uniquindio.proyecto.exception.category.CategoryNotFoundException;
 import co.edu.uniquindio.proyecto.exception.category.DuplicateCategoryException;
-import co.edu.uniquindio.proyecto.exception.IdInvalidException;
+import co.edu.uniquindio.proyecto.exception.global.IdInvalidException;
 import co.edu.uniquindio.proyecto.repository.CategoryRepository;
 import co.edu.uniquindio.proyecto.service.interfaces.CategoryService;
 import co.edu.uniquindio.proyecto.service.mapper.CategoryMapper;

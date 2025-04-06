@@ -6,16 +6,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+
 /**
  * Servicio de autorización encargado de validar que el usuario actual tenga los permisos
  * adecuados para realizar determinadas acciones, ya sea que sea el mismo usuario o un administrador.
  */
-@Service
+@Service("authorizationService")
 @Slf4j
 @RequiredArgsConstructor
 public class AuthorizationServiceImplements implements AuthorizationService {
 
     private final SecurityUtils securityUtils;
+
 
     /**
      * Verifica que el usuario actual es el mismo que el usuario solicitado o bien que tenga el rol de administrador.

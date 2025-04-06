@@ -9,5 +9,7 @@ public record ImageUploadRequest(
         @Pattern(regexp = "^(http|https)://res.cloudinary.com/.*", message = "URL de Cloudinary inválida")
         String imageUrl,
         @NotBlank(message = "El id del reporte es obligatorio")
-        String reportId
+        String reportId,
+        @NotBlank(message = "El id del usuario es obligatorio")
+        String userId
 ) {}

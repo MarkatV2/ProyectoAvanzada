@@ -17,4 +17,5 @@ public class Comment {
     private ObjectId reportId;
     private String comment;
     private LocalDateTime createdAt;
+    private CommentStatus commentStatus;
 }

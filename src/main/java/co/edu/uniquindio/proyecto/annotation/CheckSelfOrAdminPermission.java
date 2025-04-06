@@ -1,4 +1,4 @@
-package co.edu.uniquindio.proyecto.target;
+package co.edu.uniquindio.proyecto.annotation;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 

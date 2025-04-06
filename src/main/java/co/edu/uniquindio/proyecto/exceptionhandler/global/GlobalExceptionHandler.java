@@ -1,11 +1,11 @@
-package co.edu.uniquindio.proyecto.exceptionhandler;
+package co.edu.uniquindio.proyecto.exceptionhandler.global;
 
 import co.edu.uniquindio.proyecto.dto.response.ErrorResponse;
 import co.edu.uniquindio.proyecto.dto.response.ValidationErrorResponse;
-import co.edu.uniquindio.proyecto.exception.*;
-import co.edu.uniquindio.proyecto.exception.image.ImageNotFoundException;
-import co.edu.uniquindio.proyecto.exception.image.InvalidImageException;
+import co.edu.uniquindio.proyecto.exception.global.IdInvalidException;
+import co.edu.uniquindio.proyecto.exceptionhandler.ErrorResponseBuilder;
 import com.mongodb.MongoSocketOpenException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,19 +15,20 @@ import org.springframework.web.context.request.WebRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.naming.ServiceUnavailableException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
+    private final ErrorResponseBuilder errorResponseBuilder;
 
     @ExceptionHandler(ServiceUnavailableException.class)
     public ResponseEntity<ErrorResponse> handleServiceUnavailable(ServiceUnavailableException ex, WebRequest request) {
         log.error("Error de servicio: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.SERVICE_UNAVAILABLE, request);
+        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.SERVICE_UNAVAILABLE, request);
     }
 
     /* @ExceptionHandler(Exception.class)
@@ -61,25 +62,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIdInvalid(
             IdInvalidException ex, WebRequest request) {
         log.error("Error de ID: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
+        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
-
-
-    @ExceptionHandler(DuplicateReportException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateReportException(
-            DuplicateReportException ex, WebRequest request
-    ) {
-        log.error("Reporte Duplicado: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
-    }
-
-    @ExceptionHandler(ReportNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleReportNotFound(
-            ReportNotFoundException ex, WebRequest request) {
-        log.error("Error al encontrar Imagen: {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
-    }
-
 
 
 
@@ -87,18 +71,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccountInvalid(
             MongoSocketOpenException ex, WebRequest request) {
         log.error("Error al conectarse en la base de datos {}", ex.getMessage());
-        return buildErrorResponse(ex, HttpStatus.SERVICE_UNAVAILABLE, request);
-    }
-
-
-    private ResponseEntity<ErrorResponse> buildErrorResponse(Exception ex, HttpStatus status, WebRequest request) {
-        return new ResponseEntity<>(
-                new ErrorResponse(
-                        LocalDateTime.now(),
-                        ex.getMessage(),
-                        status.getReasonPhrase(),
-                        request.getDescription(false),
-                        status.value()), status);
+        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.SERVICE_UNAVAILABLE, request);
     }
 
 

@@ -23,6 +23,7 @@ public interface ImageMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "uploadDate", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "reportId", source = "reportId", qualifiedByName = "stringToObjectId")
+    @Mapping(target = "userId", source = "userId", qualifiedByName = "stringToObjectId")
     Image toImage(ImageUploadRequest image);
 
     @Named("objectIdToString")
