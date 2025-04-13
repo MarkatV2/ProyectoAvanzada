@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nuevo comentario en tu reporte</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .email-container {
+            width: 100%;
+            padding: 30px 0;
+            background-color: #f4f6f8;
+        }
+
+        .email-content {
+            background-color: #ffffff;
+            max-width: 600px;
+            margin: auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background-color: #3f51b5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .body {
+            padding: 30px;
+        }
+
+        .body h2 {
+            font-size: 18px;
+            margin-top: 0;
+        }
+
+        .comment-box {
+            background-color: #f1f1f1;
+            border-left: 4px solid #3f51b5;
+            padding: 15px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            padding: 20px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #3f51b5;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background-color: #303f9f;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="email-content">
+        <div class="header">
+            <h1>Nuevo comentario en tu reporte</h1>
+        </div>
+        <div class="body">
+            <h2>¡Hola!</h2>
+            <p>El usuario <strong>${username}</strong> ha comentado en tu reporte titulado:</p>
+            <p><strong>${reportTitle}</strong></p>
+
+            <div class="comment-box">
+                ${commentContent}
+            </div>
+
+            <p>Puedes acceder a la plataforma para ver más detalles.</p>
+
+            <p style="text-align: center;">
+                <a href="*" class="button">Ir a la plataforma</a>
+            </p>
+        </div>
+        <div class="footer">
+            Este es un mensaje automático. Por favor no responder a este correo.
+            <br>© 2025 MapSphere. Todos los derechos reservados.
+        </div>
+    </div>
+</div>
+</body>
+</html>

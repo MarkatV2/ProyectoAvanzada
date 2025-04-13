@@ -27,6 +27,7 @@ public class User implements UserDetails {
     private Rol rol;
     private AccountStatus accountStatus;
     private String cityOfResidence;
+    private double notificationRadiusKm;
 
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;

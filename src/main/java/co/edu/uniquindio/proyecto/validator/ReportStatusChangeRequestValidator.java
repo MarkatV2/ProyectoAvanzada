@@ -3,7 +3,6 @@ package co.edu.uniquindio.proyecto.validator;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,7 +30,7 @@ public class ReportStatusChangeRequestValidator {
                 }
             }
             case RESOLVED -> {
-                if (!report.getUserId().toString().equals(currentUserId) && !isAdmin) {
+                if (!report.getUserId().equals(currentUserId) && !isAdmin) {
                     log.error("Solo el creador o un admin puede marcar un reporte como RESOLVED.");
                     throw new SecurityException("No autorizado para cambiar a RESOLVED.");
                 }

@@ -13,8 +13,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 /**
- * Manejador de excepciones para errores relacionados con categorías.
- * Centraliza la generación de respuestas de error utilizando ErrorResponseBuilder.
+ * Manejador global de excepciones específicas del dominio de categorías.
+ * <p>
+ * Utiliza {@link ErrorResponseBuilder} para generar respuestas de error consistentes y
+ * enriquecidas con detalles como timestamp, código de error y ruta de la petición.
+ * </p>
+ *
+ * <p>
+ * Captura y transforma excepciones del dominio de categorías en respuestas HTTP claras,
+ * con un formato JSON estandarizado.
+ * </p>
  */
 @RestControllerAdvice
 @Slf4j
@@ -24,30 +32,32 @@ public class CategoryExceptionHandler {
     private final ErrorResponseBuilder errorResponseBuilder;
 
     /**
-     * Maneja la excepción DuplicateCategoryException.
+     * Maneja la excepción {@link DuplicateCategoryException} cuando se intenta crear o actualizar
+     * una categoría con un nombre que ya existe.
      *
-     * @param ex      Excepción lanzada cuando se intenta crear o actualizar una categoría con un nombre duplicado.
+     * @param ex      Excepción lanzada.
      * @param request Contexto de la petición.
-     * @return ResponseEntity con el error y estado HTTP 409 (CONFLICT).
+     * @return {@link ResponseEntity} con el detalle del error y código 409 (CONFLICT).
      */
     @ExceptionHandler(DuplicateCategoryException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateCategoryException(
             DuplicateCategoryException ex, WebRequest request) {
-        log.error("Categoría duplicada: {}", ex.getMessage());
+        log.warn("Intento de crear categoría duplicada: {}", ex.getMessage());
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.CONFLICT, request);
     }
 
     /**
-     * Maneja la excepción CategoryNotFoundException.
+     * Maneja la excepción {@link CategoryNotFoundException} cuando no se encuentra
+     * la categoría solicitada.
      *
-     * @param ex      Excepción lanzada cuando no se encuentra una categoría.
+     * @param ex      Excepción lanzada.
      * @param request Contexto de la petición.
-     * @return ResponseEntity con el error y estado HTTP 404 (NOT FOUND).
+     * @return {@link ResponseEntity} con el detalle del error y código 404 (NOT FOUND).
      */
     @ExceptionHandler(CategoryNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCategoryNotFound(
             CategoryNotFoundException ex, WebRequest request) {
-        log.error("Categoría no encontrada: {}", ex.getMessage());
+        log.warn("Categoría no encontrada: {}", ex.getMessage());
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
     }
 }

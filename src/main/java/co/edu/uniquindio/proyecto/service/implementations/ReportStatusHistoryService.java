@@ -31,7 +31,7 @@ public class ReportStatusHistoryService {
      * @param newStatus      Nuevo estado.
      */
     public void createHistory(ObjectId reportId, ObjectId userId, ReportStatus previousStatus, ReportStatus newStatus) {
-        ReportStatusHistory history = historyMapper.toEntity(reportId, userId, previousStatus, newStatus);
+        historyMapper.toEntity(reportId, userId, previousStatus, newStatus);
         log.info("Se creó historial para reporte {}: {} -> {} por el usuario {}",
                 reportId, previousStatus, newStatus, userId);
     }
@@ -53,31 +53,5 @@ public class ReportStatusHistoryService {
         return historyMapper.toResponse(history);
     }
 
-    /*
-     * Obtiene de forma paginada el historial de estados para un reporte.
-     *
-     * @param reportId ID del reporte.
-     * @param pageable Parámetros de paginación.
-     * @return ReportStatusHistoryPaginatedResponse con el historial.
-     * @throws ResourceNotFoundException Si no se encuentra ningún historial para el reporte.
-
-    public ReportStatusHistoryPaginatedResponse getHistoriesByReportId(String reportId, Pageable pageable) {
-        log.info("Obteniendo historial para el reporte con ID: {}", reportId);
-        Page<ReportStatusHistory> page = historyRepository.findByReportId(new ObjectId(reportId), pageable);
-        if (page.isEmpty()) {
-            log.warn("No se encontraron historiales para el reporte con ID: {}", reportId);
-            throw new HystoryNotFoundException("No se encontraron historiales para el reporte con ID: " + reportId);
-        }
-        List<ReportStatusHistoryResponse> content = page.getContent()
-                .stream()
-                .map(historyMapper::toResponse)
-                .collect(Collectors.toList());
-        return new ReportStatusHistoryPaginatedResponse(
-                content,
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages()
-        );
-    }*/
+    //AGREGAR LAS COSULTAS PERZONALIZADAS
 }

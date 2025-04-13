@@ -8,8 +8,11 @@ import org.springframework.stereotype.Service;
 
 
 /**
- * Servicio de autorización encargado de validar que el usuario actual tenga los permisos
- * adecuados para realizar determinadas acciones, ya sea que sea el mismo usuario o un administrador.
+ * Implementación del servicio de autorización encargado de validar
+ * si el usuario autenticado tiene permisos para realizar una acción específica.
+ *
+ * <p>La inyección se realiza por constructor gracias a {@link RequiredArgsConstructor},
+ * y el componente está registrado en el contexto de Spring como "authorizationService".</p>
  */
 @Service("authorizationService")
 @Slf4j
@@ -18,28 +21,51 @@ public class AuthorizationServiceImplements implements AuthorizationService {
 
     private final SecurityUtils securityUtils;
 
-
     /**
-     * Verifica que el usuario actual es el mismo que el usuario solicitado o bien que tenga el rol de administrador.
+     * Verifica si el usuario autenticado es el mismo que el solicitado o si posee el rol ADMIN.
      *
-     * @param userId Identificador del usuario sobre el que se realiza la verificación.
-     * @return {@code true} si el usuario actual es el mismo o es administrador; {@code false} en caso contrario.
+     * <p>Utilizado comúnmente para permitir que los usuarios accedan o modifiquen sus propios datos
+     * o para que administradores accedan a cualquier recurso.</p>
+     *
+     * @param userId Identificador del usuario objetivo.
+     * @return {@code true} si el usuario actual es el mismo o posee rol de administrador.
      */
+    @Override
     public boolean isSelfOrAdmin(String userId) {
-        log.info("Iniciando verificación de permisos para el usuario: {}", userId);
-        return securityUtils.isSelfOrAdmin(userId);
+        log.info("Verificando si el usuario actual es el mismo o tiene permisos de administrador. userId: {}", userId);
+
+        boolean result = securityUtils.isSelfOrAdmin(userId);
+
+        if (result) {
+            log.debug("Autorización concedida para el usuario: {}", userId);
+        } else {
+            log.warn("Autorización denegada para el usuario: {}", userId);
+        }
+
+        return result;
     }
 
     /**
-     * Verifica que el usuario actual es el mismo que el usuario solicitado.
+     * Verifica si el usuario autenticado coincide exactamente con el proporcionado.
      *
-     * @param userId Identificador del usuario a verificar.
-     * @return {@code true} si el usuario actual coincide con el proporcionado; {@code false} en caso contrario.
+     * <p>Se recomienda este método cuando solo se desea permitir acceso exclusivo al propietario del recurso.</p>
+     *
+     * @param userId Identificador del usuario objetivo.
+     * @return {@code true} si el usuario autenticado coincide con el userId.
      */
+    @Override
     public boolean isSelf(String userId) {
-        log.info("Verificando que el usuario actual es el mismo que el solicitado: {}", userId);
+        log.info("Verificando coincidencia con usuario autenticado. userId objetivo: {}", userId);
+
         String currentUserId = securityUtils.getCurrentUserId();
-        log.debug("Usuario actual obtenido: {}", currentUserId);
-        return userId != null && userId.equals(currentUserId);
+        boolean result = userId != null && userId.equals(currentUserId);
+
+        if (result) {
+            log.debug("El usuario autenticado ({}) coincide con el solicitado", currentUserId);
+        } else {
+            log.warn("El usuario autenticado ({}) no coincide con el solicitado ({})", currentUserId, userId);
+        }
+
+        return result;
     }
 }

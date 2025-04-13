@@ -29,7 +29,7 @@ public class UserDetailsServiceImplements implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
         log.debug("Cargando detalles del usuario para el email: {}", email);
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + email));
+                .orElseThrow(() -> new UserNotFoundException(email));
     }
 }
 

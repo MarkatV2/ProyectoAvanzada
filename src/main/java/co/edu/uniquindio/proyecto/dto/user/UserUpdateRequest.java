@@ -4,6 +4,9 @@ import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 
+/**
+ * DTO utilizado para actualizar los datos personales del usuario.
+ */
 public record UserUpdateRequest(
         @Email(message = "El email debe tener un formato correcto")
         @Size(min = 8, max = 50, message = "El email debe contener entre 8 y 50 carácteres")

@@ -25,5 +25,6 @@ public class VerificationCode {
 
     @Field("expires_at")
     private LocalDateTime expiresAt;
+    private VerificationCodeType verificationCodeType;
 
 }

@@ -13,9 +13,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 /**
- * Manejador de excepciones para errores relacionados con imágenes.
+ * Manejador global de excepciones relacionadas con el procesamiento de imágenes.
  * <p>
- * Centraliza la generación de respuestas de error utilizando ErrorResponseBuilder.
+ * Este manejador captura excepciones específicas del dominio de imágenes y construye
+ * respuestas de error estandarizadas mediante {@link ErrorResponseBuilder}.
+ * </p>
+ *
+ * <p>
+ * Las excepciones manejadas incluyen imágenes no encontradas y URLs inválidas.
  * </p>
  */
 @RestControllerAdvice
@@ -26,30 +31,30 @@ public class ImageExceptionHandler {
     private final ErrorResponseBuilder errorResponseBuilder;
 
     /**
-     * Maneja la excepción {@code ImageNotFoundException}.
+     * Maneja la excepción {@link ImageNotFoundException} cuando no se encuentra la imagen solicitada.
      *
-     * @param ex      La excepción lanzada cuando no se encuentra una imagen.
+     * @param ex      Excepción lanzada.
      * @param request Contexto de la petición.
-     * @return ResponseEntity con el ErrorResponse y estado HTTP 404 (Not Found).
+     * @return {@link ResponseEntity} con detalles del error y código 404 (NOT FOUND).
      */
     @ExceptionHandler(ImageNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleImageNotFound(
             ImageNotFoundException ex, WebRequest request) {
-        log.error("Error al encontrar imagen: {}", ex.getMessage());
+        log.warn("Imagen no encontrada: {}", ex.getMessage());
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
     }
 
     /**
-     * Maneja la excepción {@code InvalidImageException}.
+     * Maneja la excepción {@link InvalidImageException} cuando se proporciona una URL o contenido inválido.
      *
-     * @param ex      La excepción lanzada cuando la URL de la imagen es inválida.
+     * @param ex      Excepción lanzada.
      * @param request Contexto de la petición.
-     * @return ResponseEntity con el ErrorResponse y estado HTTP 400 (Bad Request).
+     * @return {@link ResponseEntity} con detalles del error y código 400 (BAD REQUEST).
      */
     @ExceptionHandler(InvalidImageException.class)
     public ResponseEntity<ErrorResponse> handleInvalidImage(
             InvalidImageException ex, WebRequest request) {
-        log.error("Error de imagen (URL no válida): {}", ex.getMessage());
+        log.warn("Imagen inválida: {}", ex.getMessage());
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 }

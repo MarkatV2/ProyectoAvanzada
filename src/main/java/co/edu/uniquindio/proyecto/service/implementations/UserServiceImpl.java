@@ -2,6 +2,7 @@ package co.edu.uniquindio.proyecto.service.implementations;
 
 import co.edu.uniquindio.proyecto.dto.response.SuccessResponse;
 import co.edu.uniquindio.proyecto.dto.user.*;
+import co.edu.uniquindio.proyecto.entity.auth.VerificationCodeType;
 import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
 import co.edu.uniquindio.proyecto.entity.user.User;
 import co.edu.uniquindio.proyecto.exception.user.EmailAlreadyExistsException;
@@ -9,8 +10,8 @@ import co.edu.uniquindio.proyecto.exception.user.InvalidPasswordException;
 import co.edu.uniquindio.proyecto.exception.global.ServiceUnavailableException;
 import co.edu.uniquindio.proyecto.exception.user.UserNotFoundException;
 import co.edu.uniquindio.proyecto.repository.UserRepository;
-import co.edu.uniquindio.proyecto.service.auth.VerificationService;
 import co.edu.uniquindio.proyecto.service.interfaces.UserService;
+import co.edu.uniquindio.proyecto.service.interfaces.VerificationService;
 import co.edu.uniquindio.proyecto.service.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +24,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.stream.Collectors;
-
+/**
+ * Servicio que gestiona operaciones relacionadas con usuarios, como registro,
+ * actualización, eliminación lógica y recuperación de usuarios.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserServiceImplements implements UserService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -42,6 +45,7 @@ public class UserServiceImplements implements UserService {
      * @param size cantidad de usuarios por página (máximo 100)
      * @return objeto {@code PaginatedUserResponse} con la lista y datos de paginación
      */
+    @Override
     public PaginatedUserResponse getUsers(int page, int size) {
         log.info("Solicitando lista de usuarios. Página: {}, Tamaño: {}", page, size);
         try {
@@ -59,9 +63,7 @@ public class UserServiceImplements implements UserService {
                     (int) userPage.getTotalElements(),
                     userPage.getTotalPages(),
                     page,
-                    userPage.getContent().stream()
-                            .map(userMapper::toUserResponse)
-                            .collect(Collectors.toList())
+                    userMapper.toListResponse(userPage.getContent())
             );
         } catch (UncategorizedMongoDbException e) {
             log.error("Error de MongoDB al obtener usuarios: {}", e.getMessage(), e);
@@ -80,6 +82,7 @@ public class UserServiceImplements implements UserService {
      * @throws EmailAlreadyExistsException si el correo ya está registrado
      */
     @Transactional
+    @Override
     public UserResponse registerUser(UserRegistration userRegistration) {
         log.info("Consultando usuario con email: {} ...", userRegistration.email());
         if (userRepository.findByEmail(userRegistration.email()).isPresent()) {
@@ -93,7 +96,7 @@ public class UserServiceImplements implements UserService {
             User savedUser = userRepository.save(user);
             log.info("Usuario registrado exitosamente: {}", savedUser.getEmail());
             log.info("Generando token de validación para el usuario: {}", savedUser.getEmail());
-            verificationService.generateAndSendCode(savedUser);
+            verificationService.generateAndSendCode(savedUser, VerificationCodeType.ACTIVATION);
             return userMapper.toUserResponse(savedUser);
         } catch (DataAccessException e) {
             log.error("Error al registrar el usuario: {}", e.getMessage(), e);
@@ -108,10 +111,11 @@ public class UserServiceImplements implements UserService {
      * @return {@code UserResponse} con la información del usuario
      * @throws UserNotFoundException si el usuario no existe
      */
+    @Override
     public UserResponse getUser(String userId) {
         log.info("Consultando usuario con ID: {}", userId);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
         return userMapper.toUserResponse(user);
     }
 
@@ -125,14 +129,15 @@ public class UserServiceImplements implements UserService {
      * @throws EmailAlreadyExistsException  si el correo actualizado ya está registrado en otro usuario
      */
     @Transactional
+    @Override
     public UserResponse updateUser(String id, UserUpdateRequest userUpdateRequest) {
         log.info("Consultando usuario con ID: {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         log.info("Verificando disponibilidad del correo: {}", userUpdateRequest.email());
         var emailUserOpt = userRepository.findByEmail(userUpdateRequest.email());
-        if (emailUserOpt.isPresent() && !emailUserOpt.get().getId().equals(id)) {
+        if (emailUserOpt.isPresent() && !emailUserOpt.get().getId().toString().equals(id)) {
             log.info("El correo {} ya existe", userUpdateRequest.email());
             throw new EmailAlreadyExistsException("El correo ya está registrado");
         }
@@ -154,10 +159,11 @@ public class UserServiceImplements implements UserService {
      * @throws InvalidPasswordException si la contraseña actual es incorrecta
      */
     @Transactional
+    @Override
     public SuccessResponse updateUserPassword(String id, PasswordUpdate passwordUpdate) {
         log.info("Consultando usuario con ID: {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         if (!passwordEncoder.matches(passwordUpdate.currentPassword(), user.getPassword())) {
             log.info("Contraseña actual incorrecta para el usuario: {}", user.getEmail());
@@ -179,10 +185,11 @@ public class UserServiceImplements implements UserService {
      * @throws UserNotFoundException si el usuario no existe
      */
     @Transactional
+    @Override
     public SuccessResponse deleteUser(String id) {
         log.info("Eliminando usuario con ID: {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException(id));
         user.setAccountStatus(AccountStatus.DELETED);
         userRepository.save(user);
         log.info("Usuario con ID: {} eliminado exitosamente", id);

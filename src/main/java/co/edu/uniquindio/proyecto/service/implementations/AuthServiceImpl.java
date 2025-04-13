@@ -18,11 +18,18 @@ import org.springframework.stereotype.Service;
 
 /**
  * Servicio encargado de la autenticación de usuarios y generación de tokens JWT.
+ *
+ * <p>Este servicio implementa la lógica para validar las credenciales proporcionadas,
+ * autenticar al usuario mediante el `AuthenticationManager` de Spring Security,
+ * y generar un token JWT que se usará para acceder a recursos protegidos.</p>
+ *
+ * <p>Además, gestiona los posibles errores durante la autenticación, lanzando excepciones personalizadas
+ * que pueden ser manejadas globalmente por controladores de excepciones (handlers).</p>
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuthServiceImplements implements AuthService {
+public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
@@ -38,58 +45,78 @@ public class AuthServiceImplements implements AuthService {
      * @throws UserNotFoundException         Si el usuario no es encontrado.
      * @throws AuthenticationServiceException Para otros errores inesperados durante la autenticación.
      */
+    @Override
     public JwtResponse authenticate(LoginRequest request) {
         log.info("Inicio de autenticación para el usuario: {}", request.userName());
+
+        validateRequest(request);
+
         try {
             // Cargar detalles del usuario
             UserDetails userDetails = loadUserDetails(request.userName());
 
-            // Realizar la autenticación usando el AuthenticationManager
+            // Realizar la autenticación
             Authentication authentication = performAuthentication(request, userDetails);
 
-            // Se espera que el principal sea una instancia de User
+            // Extraer usuario y verificar estado
             User user = (User) authentication.getPrincipal();
             verifyUserStatus(user);
 
-            // Generar token JWT para el usuario autenticado
+            // Generar y retornar el token
             String token = generateJwtToken(user);
-            log.info("Usuario {} autenticado exitosamente", request.userName());
+            log.info("Usuario '{}' autenticado exitosamente", user.getUsername());
             return new JwtResponse(token);
+
         } catch (BadCredentialsException ex) {
-            log.error("Error de autenticación para {}: credenciales incorrectas", request.userName());
-            throw new InvalidPasswordException("Contraseña Incorrecta");
+            log.warn("Credenciales incorrectas para el usuario '{}'", request.userName(), ex);
+            throw new InvalidPasswordException("Contraseña incorrecta");
         } catch (DisabledException ex) {
-            log.error("Error de autenticación para {}: cuenta deshabilitada", request.userName());
+            log.warn("La cuenta del usuario '{}' no está activada", request.userName(), ex);
             throw new AccountDisabledException("La cuenta no está activada");
         } catch (UsernameNotFoundException ex) {
-            log.error("El usuario {} no fue encontrado", request.userName());
-            throw new UserNotFoundException("Usuario no encontrado: " + request.userName());
+            log.warn("No se encontró el usuario '{}'", request.userName(), ex);
+            throw new UserNotFoundException(request.userName());
         } catch (Exception ex) {
-            log.error("Error inesperado durante la autenticación para {}: {}", request.userName(), ex.getMessage());
-            throw new AuthenticationServiceException("Error durante la autenticación", ex);
+            log.error("Error inesperado durante la autenticación del usuario '{}'", request.userName(), ex);
+            throw new AuthenticationServiceException("Error interno durante la autenticación", ex);
+        }
+    }
+    /**
+     * Valida que los campos del request no sean nulos o vacíos.
+     *
+     * @param request Petición de login.
+     * @throws InvalidPasswordException Si el usuario o contraseña están vacíos.
+     */
+    private void validateRequest(LoginRequest request) {
+        if (request == null || request.userName() == null || request.userName().isBlank()
+                || request.password() == null || request.password().isBlank()) {
+            log.warn("Solicitud de autenticación inválida: username o password vacíos");
+            throw new InvalidPasswordException("Usuario y contraseña son requeridos");
         }
     }
 
     /**
-     * Carga los detalles del usuario a partir de su nombre de usuario.
+     * Carga los detalles del usuario desde el servicio de detalles de usuario.
      *
-     * @param userName Nombre de usuario.
-     * @return Objeto {@code UserDetails} correspondiente al usuario.
+     * @param userName Nombre de usuario a buscar.
+     * @return Detalles del usuario encontrados.
+     * @throws UsernameNotFoundException si no se encuentra el usuario.
      */
     private UserDetails loadUserDetails(String userName) {
-        log.debug("Cargando detalles del usuario: {}", userName);
+        log.debug("Cargando detalles del usuario '{}'", userName);
         return userDetailsService.loadUserByUsername(userName);
     }
 
     /**
-     * Realiza la autenticación del usuario utilizando el AuthenticationManager.
+     * Realiza la autenticación con el `AuthenticationManager`.
      *
-     * @param request     Objeto con las credenciales del usuario.
+     * @param request     Objeto con las credenciales.
      * @param userDetails Detalles previamente cargados del usuario.
-     * @return Objeto {@code Authentication} resultante de la autenticación.
+     * @return Resultado de la autenticación.
+     * @throws BadCredentialsException si las credenciales son incorrectas.
      */
     private Authentication performAuthentication(LoginRequest request, UserDetails userDetails) {
-        log.debug("Realizando autenticación para el usuario: {}", request.userName());
+        log.debug("Autenticando usuario '{}'", request.userName());
         return authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.userName(),
@@ -100,15 +127,15 @@ public class AuthServiceImplements implements AuthService {
     }
 
     /**
-     * Verifica que la cuenta del usuario esté activada.
+     * Verifica si la cuenta del usuario está habilitada.
      *
-     * @param user Usuario a verificar.
-     * @throws DisabledException si la cuenta del usuario no está activada.
+     * @param user Usuario autenticado.
+     * @throws AccountDisabledException si la cuenta está deshabilitada.
      */
     private void verifyUserStatus(User user) {
         if (!user.isEnabled()) {
-            log.warn("La cuenta del usuario {} no está activada", user.getUsername());
-            throw new DisabledException("La cuenta no está activada");
+            log.warn("Usuario '{}' está registrado pero su cuenta está desactivada", user.getUsername());
+            throw new AccountDisabledException("La cuenta no está activada");
         }
     }
 
@@ -116,10 +143,10 @@ public class AuthServiceImplements implements AuthService {
      * Genera un token JWT para el usuario autenticado.
      *
      * @param user Usuario autenticado.
-     * @return Token JWT generado.
+     * @return Token JWT válido para el usuario.
      */
     private String generateJwtToken(User user) {
-        log.debug("Generando token JWT para el usuario: {}", user.getUsername());
+        log.debug("Generando JWT para el usuario '{}'", user.getUsername());
         return jwtUtils.generateToken(user);
     }
 }

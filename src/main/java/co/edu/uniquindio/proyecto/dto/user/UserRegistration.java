@@ -5,6 +5,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
+/**
+ * DTO utilizado para registrar un nuevo usuario en el sistema.
+ * Contiene los datos necesarios para crear la cuenta y su ubicación.
+ */
 public record UserRegistration(
         @Email(message = "El email debe tener un formato correcto")
         @Size(min = 8, max = 50, message = "El email debe contener entre 8 y 50 carácteres")
@@ -28,6 +32,9 @@ public record UserRegistration(
 
         @NotBlank(message = "La ciudad de residencia es obligatoria")
         String cityOfResidence,
+
+        @NotNull(message = "La ciudad de residencia es obligatoria")
+        double notificationRadiusKm,
 
         @NotNull(message = "La latitud de la dirección es obligatoria")
         double latitude,

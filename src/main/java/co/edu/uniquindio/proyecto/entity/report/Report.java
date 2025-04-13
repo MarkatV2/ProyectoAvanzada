@@ -15,6 +15,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Representa un reporte en el sistema. Un reporte es una instancia de un incidente o
+ * evento registrado por un usuario, que incluye información relevante como su título,
+ * descripción, ubicación geográfica, y estado de verificación.
+ *
+ * La entidad también maneja la relación con las categorías asociadas al reporte, los votos
+ * importantes y los usuarios que han dado "Me gusta" a este reporte.
+ *
+ * La entidad implementa {@link Ownable}, lo que significa que cada reporte está asociado
+ * a un usuario propietario, identificado por su {@link ObjectId}.
+ */
 @Data
 @Document(collection = "reports")
 public class Report implements Ownable {
@@ -27,7 +38,7 @@ public class Report implements Ownable {
 
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
-
+    private String userEmail;
     private ReportStatus reportStatus;
     private int importantVotes;
     private ObjectId userId;

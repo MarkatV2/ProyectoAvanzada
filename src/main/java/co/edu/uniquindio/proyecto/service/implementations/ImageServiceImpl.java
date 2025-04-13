@@ -29,7 +29,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ImageServiceImplements implements ImageService {
+public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
     private final ReportRepository reportRepository;
@@ -43,6 +43,7 @@ public class ImageServiceImplements implements ImageService {
      * @throws IdInvalidException      Si el ID no tiene un formato válido.
      * @throws ImageNotFoundException  Si no se encuentra la imagen.
      */
+    @Override
     public ImageResponse getImageById(String id) {
         ObjectId objectId = parseObjectId(id);
         log.debug("Buscando imagen con ID: {}", id);
@@ -62,6 +63,7 @@ public class ImageServiceImplements implements ImageService {
      * @return {@code ImageResponse} con la imagen registrada.
      * @throws InvalidImageException Si la URL de la imagen no es válida.
      */
+    @Override
     public ImageResponse registerImage(ImageUploadRequest request) {
         log.info("Verificando URL de imagen: {}", request.imageUrl());
         validateCloudinaryUrl(request.imageUrl());
@@ -78,6 +80,7 @@ public class ImageServiceImplements implements ImageService {
      * @throws IdInvalidException     Si el ID es inválido.
      * @throws ImageNotFoundException Si la imagen no se encuentra.
      */
+    @Override
     public void deleteImage(String id) {
         ObjectId objectId = parseObjectId(id);
         log.debug("Buscando imagen con ID: {}", id);
@@ -111,6 +114,7 @@ public class ImageServiceImplements implements ImageService {
      * @return Lista de {@code ImageResponse} correspondientes a las imágenes del reporte.
      * @throws ReportNotFoundException Si el reporte no se encuentra.
      */
+    @Override
     public List<ImageResponse> getAllImagesByReport(ObjectId reportId) {
         // Verifica que el reporte existe.
         reportRepository.findById(reportId)

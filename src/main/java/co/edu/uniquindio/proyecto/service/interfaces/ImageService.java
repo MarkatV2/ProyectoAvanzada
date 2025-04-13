@@ -6,10 +6,39 @@ import org.bson.types.ObjectId;
 
 import java.util.List;
 
+/**
+ * Servicio para gestionar imágenes asociadas a reportes.
+ */
 public interface ImageService {
 
-    public ImageResponse getImageById (String id);
-    public ImageResponse registerImage(ImageUploadRequest request);
-    public void deleteImage(String id);
-    public List<ImageResponse> getAllImagesByReport (ObjectId reportId);
+    /**
+     * Obtiene una imagen por su ID.
+     *
+     * @param id ID de la imagen.
+     * @return imagen encontrada.
+     */
+    ImageResponse getImageById(String id);
+
+    /**
+     * Registra una nueva imagen.
+     *
+     * @param request datos de la imagen a registrar.
+     * @return imagen registrada.
+     */
+    ImageResponse registerImage(ImageUploadRequest request);
+
+    /**
+     * Elimina una imagen por su ID.
+     *
+     * @param id ID de la imagen.
+     */
+    void deleteImage(String id);
+
+    /**
+     * Obtiene todas las imágenes asociadas a un reporte.
+     *
+     * @param reportId ID del reporte.
+     * @return lista de imágenes asociadas.
+     */
+    List<ImageResponse> getAllImagesByReport(ObjectId reportId);
 }

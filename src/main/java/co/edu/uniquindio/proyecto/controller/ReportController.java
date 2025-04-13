@@ -7,139 +7,190 @@ import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
 import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportStatusUpdate;
 import co.edu.uniquindio.proyecto.entity.report.Report;
-import co.edu.uniquindio.proyecto.service.implementations.ReportServiceImplements;
 import co.edu.uniquindio.proyecto.annotation.CheckOwnerOrAdmin;
+import co.edu.uniquindio.proyecto.service.interfaces.ReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 import java.util.List;
 
-// Controlador actualizado
+/**
+ * Controlador REST para la gestión de reportes de usuarios.
+ * <p>
+ * Permite crear, actualizar, consultar, eliminar y votar reportes.
+ * También expone endpoints para obtener comentarios e imágenes asociadas.
+ * </p>
+ */
 @RestController
 @RequestMapping("/api/v1/reports")
 @RequiredArgsConstructor
 @Slf4j
 public class ReportController {
 
-    private final ReportServiceImplements reportService;//FALTA LOS METODOS PATCH Y PUT
+    private final ReportService reportService;
 
+    /**
+     * Filtra y retorna reportes cercanos a una ubicación geográfica dada.
+     *
+     * @param latitud  Latitud del punto de referencia.
+     * @param longitud Longitud del punto de referencia.
+     * @param radio    Radio de búsqueda en kilómetros (opcional).
+     * @param page     Página de resultados (opcional).
+     * @param size     Tamaño de página (opcional).
+     * @return Lista paginada de reportes cercanos.
+     */
     @GetMapping
-    public ResponseEntity<PaginatedReportResponse> filtrarReportes(@RequestParam double latitud, @RequestParam double longitud,
-            @RequestParam(required = false) Double radio, @RequestParam(required = false) Integer page,
+    public ResponseEntity<PaginatedReportResponse> filtrarReportes(
+            @RequestParam double latitud,
+            @RequestParam double longitud,
+            @RequestParam(required = false) Double radio,
+            @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
 
-        log.info("Solicitud de obtener reportes - Lat: {}, Lon: {}", latitud, longitud);
+        log.info("📍 Obteniendo reportes cerca de: ({}, {}), radio: {}km", latitud, longitud, radio);
         PaginatedReportResponse response = reportService.getReportsNearLocation(latitud, longitud, radio, page, size);
         return ResponseEntity.ok(response);
     }
 
-
-    //METODO para obtener todas las imagenes de un reporte
-    @GetMapping("/{reportId}/images")
-    public ResponseEntity<List<ImageResponse>> getAllImagesByReport(@PathVariable String reportId) {
-        log.info("Solicitando todas las imagenes del reporte con id: {}", reportId);
-        return ResponseEntity.ok(reportService.getAllImagesByReport(reportId));
-    }
-
-
+    /**
+     * Obtiene un reporte específico por su ID.
+     *
+     * @param reportId ID del reporte.
+     * @return Reporte encontrado.
+     */
     @GetMapping("/{reportId}")
-    public ResponseEntity<ReportResponse> getReport(
-            @PathVariable String reportId) {
-        log.info("Solicitud para obtener reporte con ID: {}", reportId);
+    public ResponseEntity<ReportResponse> getReport(@PathVariable String reportId) {
+        log.info("🔍 Buscando reporte con ID: {}", reportId);
         ReportResponse response = reportService.getReportById(reportId);
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Crea un nuevo reporte.
+     *
+     * @param request Datos del nuevo reporte.
+     * @return Reporte creado con HTTP 201.
+     */
     @PostMapping
-    public ResponseEntity<ReportResponse> createReport( //Manejar el Id del usuario
+    public ResponseEntity<ReportResponse> createReport(@Valid @RequestBody ReportRequest request) {
+        log.info("🆕 Creando reporte: {}", request.title());
+        ReportResponse response = reportService.createReport(request);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(response);
+    }
+
+    /**
+     * Actualiza un reporte existente.
+     *
+     * @param reportId ID del reporte.
+     * @param request  Datos nuevos.
+     * @return Reporte actualizado.
+     */
+    @PutMapping("/{reportId}")
+    @CheckOwnerOrAdmin(entityClass = Report.class)
+    public ResponseEntity<ReportResponse> updateReport(
+            @PathVariable String reportId,
             @Valid @RequestBody ReportRequest request) {
 
-        log.info("Creando un nuevo reporte {}", request.title());
+        log.info("✏️ Actualizando reporte con ID: {}", reportId);
+        ReportResponse response = reportService.updateReport(reportId, request);
 
-        ReportResponse response = reportService.createReport(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .build()
+                .toUri();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.LOCATION, location.toString())
+                .body(response);
     }
 
 
     /**
-     * Cambia el estado de un reporte, validando si el usuario tiene permisos.
+     * Elimina lógicamente (soft delete) un reporte.
      *
-     * @param reportId ID del reporte a actualizar.
-     * @param dto Datos con el nuevo estado y mensaje (si aplica).
+     * @param reportId ID del reporte.
+     * @return HTTP 204 si fue eliminado correctamente.
+     */
+    @DeleteMapping("/{reportId}")
+    @CheckOwnerOrAdmin(entityClass = Report.class)
+    public ResponseEntity<Void> deleteReport(@PathVariable String reportId) {
+        log.info("🗑️ Eliminando reporte con ID: {}", reportId);
+        reportService.softDeleteReport(reportId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Cambia el estado de un reporte (Ej. a Resuelto, Verificado, etc.).
+     *
+     * @param reportId ID del reporte.
+     * @param dto      Estado y mensaje adicional.
      */
     @PatchMapping("/{reportId}/status")
     @CheckOwnerOrAdmin(entityClass = Report.class)
     public ResponseEntity<Void> updateReportStatus(
-            @PathVariable ObjectId reportId,
+            @PathVariable String reportId,
             @RequestBody ReportStatusUpdate dto) {
+        log.info("🔁 Cambiando estado del reporte {} a {}", reportId, dto.status());
         reportService.updateReportStatus(reportId, dto);
         return ResponseEntity.ok().build();
     }
 
-
-    @DeleteMapping("/{reportId}")
-    @CheckOwnerOrAdmin(entityClass = Report.class)
-    public ResponseEntity<Void> deleteReport(
-            @PathVariable String reportId) {
-
-        log.info("Solicitud de eliminación de reporte ID: {}", reportId);
-
-        reportService.softDeleteReport(reportId);
-        log.debug("Reporte {} eliminado exitosamente", reportId);
-
-        return ResponseEntity.noContent().build();
-    }
-
-
-    @PutMapping("/{reportId}")
-    @CheckOwnerOrAdmin(entityClass = Report.class) //devolver la ubicion
-    public ResponseEntity<ReportResponse> updateReport(
-            @PathVariable String reportId,
-            @RequestBody @Valid ReportRequest request) {
-
-        ReportResponse response = reportService.updateReport(new ObjectId(reportId), request);
-        return ResponseEntity.ok(response);
-    }
-
     /**
-     * Endpoint para alternar (toggle) el voto (like) de un reporte.
-     * Si el usuario no ha votado, se suma un voto; si ya votó, se remueve.
+     * Alterna el voto "importante" de un usuario sobre un reporte.
      *
-     * @param reportId Identificador del reporte.
-     * @return Respuesta sin contenido.
+     * @param reportId ID del reporte.
+     * @return HTTP 204 si se alternó correctamente.
      */
     @PatchMapping("/{reportId}/votes")
     public ResponseEntity<Void> toggleVote(@PathVariable String reportId) {
-        log.debug("intentando alternar el voto para el reporte {}", reportId);
-
+        log.debug("👍 Alternando voto para el reporte {}", reportId);
         reportService.toggleReportVote(reportId);
         return ResponseEntity.noContent().build();
     }
 
-
+    /**
+     * Obtiene todas las imágenes asociadas a un reporte.
+     *
+     * @param reportId ID del reporte.
+     * @return Lista de imágenes.
+     */
+    @GetMapping("/{reportId}/images")
+    public ResponseEntity<List<ImageResponse>> getAllImagesByReport(@PathVariable String reportId) {
+        log.info("🖼️ Consultando imágenes del reporte ID: {}", reportId);
+        return ResponseEntity.ok(reportService.getAllImagesByReport(reportId));
+    }
 
     /**
-     * Endpoint para obtener todos los comentarios asociados a un reporte de forma paginada.
+     * Obtiene los comentarios de un reporte de forma paginada.
      *
-     * @param reportId Identificador del reporte.
-     * @param page     Número de página (opcional, por defecto 0).
-     * @param size     Tamaño de página (opcional, por defecto 10).
-     * @return ResponseEntity con el CommentPaginatedResponse.
+     * @param reportId ID del reporte.
+     * @param page     Página (por defecto 0).
+     * @param size     Tamaño de página (por defecto 10).
+     * @return Comentarios paginados.
      */
     @GetMapping("/{reportId}/comments")
     public ResponseEntity<CommentPaginatedResponse> getCommentsByReport(
             @PathVariable String reportId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("Recibida petición para obtener comentarios del reporte con ID: {} (página: {}, tamaño: {})", reportId, page, size);
+        log.info("💬 Comentarios del reporte {} (página {}, tamaño {})", reportId, page, size);
         CommentPaginatedResponse response = reportService.getCommentsByReportId(reportId, page, size);
         return ResponseEntity.ok(response);
     }
 
-
 }
-

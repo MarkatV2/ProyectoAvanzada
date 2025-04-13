@@ -6,9 +6,8 @@ import co.edu.uniquindio.proyecto.entity.report.Report;
 import org.bson.types.ObjectId;
 import org.mapstruct.*;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 // Mapper actualizado
 @Mapper(componentModel = "spring",
@@ -16,13 +15,15 @@ import java.time.LocalDateTime;
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ReportMapper {
 
+    List<ReportResponse> toResponseList(List<Report> reports);
 
     @Mapping(target = "location", expression = "java(toGeoJsonPoint(request.latitude(), request.longitude()))")
     @Mapping(target = "reportStatus", constant = "PENDING")
     @Mapping(target = "importantVotes", constant = "0")
-    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "userId", source = "userId", qualifiedByName = "stringToObjectId")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-    Report toEntity(ReportRequest request);
+    @Mapping(target = "userEmail", source = "currentUsername")
+    Report toEntity(ReportRequest request, String userId, String currentUsername);
 
 
     @Mapping(target = "id", source = "id", qualifiedByName = "objectIdToString")
@@ -37,6 +38,7 @@ public interface ReportMapper {
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userEmail", ignore = true)
     void updateEntity(@MappingTarget Report report, ReportRequest request);
 
 
@@ -44,6 +46,10 @@ public interface ReportMapper {
     default String objectIdToString(ObjectId id) {
         return id != null ? id.toString() : null;
     }
+
+    @Named("stringToObjectId")
+    default ObjectId stringToObjectId(String id){ return id != null ? new ObjectId(id) : null;}
+
 
     default GeoJsonPoint toGeoJsonPoint(double latitud, double longitud) {
         return new GeoJsonPoint(longitud, latitud); // MongoDB usa (longitud, latitud)

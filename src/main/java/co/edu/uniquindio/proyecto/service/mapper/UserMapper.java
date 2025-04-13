@@ -14,11 +14,14 @@ import org.mapstruct.*;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Mapper(componentModel = "spring",
         imports = {LocalDate.class, Rol.class, AccountStatus.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
+
+    List<UserResponse> toListResponse (List<User> users);
 
     // Mapeo a UserResponse (existente)
     @Mapping(target = "accountStatus", expression = "java(user.getAccountStatus().toString())")

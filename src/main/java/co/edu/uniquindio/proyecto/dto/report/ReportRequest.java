@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
+/**
+ * DTO para crear un reporte.
+ */
 public record ReportRequest (
         @NotBlank(message = "El titulo es obligatorio")
         String title,

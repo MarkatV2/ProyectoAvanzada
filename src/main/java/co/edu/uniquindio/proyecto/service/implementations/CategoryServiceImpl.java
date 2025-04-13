@@ -17,16 +17,25 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Implementación del servicio de categorías.
+ * Implementación del servicio de comentarios.
+ * Proporciona operaciones para crear, consultar, listar y eliminar comentarios asociados a reportes.
  * <p>
- * Proporciona operaciones para gestionar categorías: obtener todas las categorías activas,
- * buscar, crear, actualizar y desactivar (soft delete) una categoría.
- * </p>
+ * Funcionalidades:
+ * - Crear comentarios y notificar al autor del reporte.
+ * - Buscar comentarios por ID.
+ * - Listar comentarios de un reporte de forma paginada.
+ * - Realizar eliminación lógica (soft delete) de comentarios.
+ * <p>
+ * Excepciones controladas:
+ * - CommentNotFoundException: cuando no se encuentra un comentario.
+ * - ReportNotFoundException: cuando no se encuentra el reporte asociado.
+ * - IllegalArgumentException: cuando los identificadores tienen formato incorrecto.
  */
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CategoryServiceImplements implements CategoryService {
+public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -39,7 +48,7 @@ public class CategoryServiceImplements implements CategoryService {
     @Override
     public List<CategoryResponse> findAllActiveCategories() {
         log.info("Solicitando lista de categorías activas");
-        return categoryRepository.findByActivatedTrue().stream()
+        return categoryRepository.findAllByActivatedTrue().stream()
                 .map(categoryMapper::toCategoryResponse)
                 .toList();
     }
@@ -77,11 +86,10 @@ public class CategoryServiceImplements implements CategoryService {
         log.debug("Validando existencia de categoría con nombre: {}", request.name());
         if (categoryRepository.existsByName(request.name())) {
             log.warn("Intento de creación de categoría duplicada: {}", request.name());
-            throw new DuplicateCategoryException("La categoría '" + request.name() + "' ya existe");
+            throw new DuplicateCategoryException(request.name());
         }
         log.debug("Mapeando datos de request a entidad Category");
         Category newCategory = categoryMapper.toEntity(request);
-        log.debug("Persistiendo nueva categoría en la base de datos");
         Category savedCategory = categoryRepository.save(newCategory);
         log.info("Categoría creada exitosamente con nombre: {}", savedCategory.getName());
         return categoryMapper.toCategoryResponse(savedCategory);

@@ -12,10 +12,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
-
 /**
- * Manejador de excepciones para errores relacionados con la autenticación.
- * Centraliza la generación de respuestas de error utilizando ErrorResponseBuilder.
+ * Manejador global de excepciones relacionadas con procesos de autenticación.
+ * <p>
+ * Esta clase captura excepciones específicas del dominio de autenticación como:
+ * códigos inválidos, códigos expirados y cuentas deshabilitadas, centralizando
+ * la generación de respuestas de error estandarizadas para el cliente.
+ * </p>
+ *
+ * <p>
+ * Utiliza {@link ErrorResponseBuilder} para construir respuestas consistentes y
+ * {@link RestControllerAdvice} para integrarse con el ciclo de vida de las excepciones
+ * en controladores REST. Los errores son registrados usando SLF4J para facilitar
+ * la trazabilidad en entornos productivos.
+ * </p>
  */
 @RestControllerAdvice
 @Slf4j
@@ -25,41 +35,44 @@ public class AuthExceptionHandler {
     private final ErrorResponseBuilder errorResponseBuilder;
 
     /**
-     * Maneja la excepción InvalidCodeException.
+     * Maneja la excepción {@link InvalidCodeException}, lanzada cuando
+     * se proporciona un código de verificación incorrecto.
      *
-     * @param ex      Excepción lanzada cuando el código de verificación es inválido.
+     * @param ex      Excepción lanzada por un código inválido.
      * @param request Contexto de la petición.
-     * @return ResponseEntity con el error y estado HTTP BAD_REQUEST.
+     * @return ResponseEntity con mensaje de error y estado HTTP 400.
      */
     @ExceptionHandler(InvalidCodeException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCodeException(InvalidCodeException ex, WebRequest request) {
-        log.error("Código de verificación inválido: {}", ex.getMessage());
+        log.error("Código de verificación inválido. Detalles: {} | Ruta: {}", ex.getMessage(), request.getDescription(false));
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
     /**
-     * Maneja la excepción CodeExpiredException.
+     * Maneja la excepción {@link CodeExpiredException}, lanzada cuando
+     * el código de verificación ha caducado.
      *
-     * @param ex      Excepción lanzada cuando el código de verificación ha expirado.
+     * @param ex      Excepción lanzada por código expirado.
      * @param request Contexto de la petición.
-     * @return ResponseEntity con el error y estado HTTP BAD_REQUEST.
+     * @return ResponseEntity con mensaje de error y estado HTTP 400.
      */
     @ExceptionHandler(CodeExpiredException.class)
     public ResponseEntity<ErrorResponse> handleCodeExpiredException(CodeExpiredException ex, WebRequest request) {
-        log.error("Código de verificación expirado: {}", ex.getMessage());
+        log.error("Código de verificación expirado. Detalles: {} | Ruta: {}", ex.getMessage(), request.getDescription(false));
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
     /**
-     * Maneja la excepción AccountDisabledException.
+     * Maneja la excepción {@link AccountDisabledException}, lanzada cuando
+     * un usuario intenta autenticarse con una cuenta deshabilitada.
      *
-     * @param ex      Excepción lanzada cuando la cuenta está deshabilitada.
+     * @param ex      Excepción por cuenta inactiva.
      * @param request Contexto de la petición.
-     * @return ResponseEntity con el error y estado HTTP FORBIDDEN.
+     * @return ResponseEntity con mensaje de error y estado HTTP 403.
      */
     @ExceptionHandler(AccountDisabledException.class)
     public ResponseEntity<ErrorResponse> handleAccountDisabledException(AccountDisabledException ex, WebRequest request) {
-        log.error("La cuenta está deshabilitada: {}", ex.getMessage());
+        log.error("La cuenta está deshabilitada. Detalles: {} | Ruta: {}", ex.getMessage(), request.getDescription(false));
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.FORBIDDEN, request);
     }
 }

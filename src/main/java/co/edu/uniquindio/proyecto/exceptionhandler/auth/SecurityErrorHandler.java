@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
@@ -18,9 +18,18 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 /**
- * Manejador de errores de seguridad para autenticación y autorización.
- * Implementa tanto {@code AuthenticationEntryPoint} como {@code AccessDeniedHandler} para interceptar
- * fallos de autenticación y denegaciones de acceso, retornando respuestas de error estandarizadas.
+ * Manejador de errores de seguridad que intercepta fallos de autenticación y autorización.
+ * <p>
+ * Implementa {@link AuthenticationEntryPoint} para manejar intentos de acceso no autenticados,
+ * e {@link AccessDeniedHandler} para capturar accesos prohibidos a recursos protegidos.
+ * Retorna respuestas JSON estandarizadas a través de {@link ErrorResponse}, mejorando la
+ * experiencia del cliente y facilitando el diagnóstico de errores.
+ * </p>
+ *
+ * <p>
+ * Utiliza {@link ObjectMapper} para serializar la respuesta, e incorpora logs claros con contexto
+ * útil para trazabilidad en ambientes productivos.
+ * </p>
  */
 @Component
 @Slf4j
@@ -30,26 +39,27 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
     private final ObjectMapper objectMapper;
 
     /**
-     * Maneja fallos de autenticación.
+     * Maneja errores de autenticación, como token ausente, inválido o expirado.
      *
-     * @param request       La petición HTTP.
+     * @param request       La petición HTTP fallida.
      * @param response      La respuesta HTTP.
-     * @param authException La excepción de autenticación.
-     * @throws IOException Si ocurre un error de entrada/salida al escribir la respuesta.
+     * @param authException La excepción de autenticación lanzada.
+     * @throws IOException Si ocurre un error al escribir la respuesta.
      */
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        log.warn("Fallo de autenticación en {}: {}", request.getRequestURI(), authException.getMessage());
-        ErrorResponse errorResponse = buildAuthError(request, authException);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(errorResponse.status());
-        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+        String path = request.getRequestURI();
+        log.warn("Fallo de autenticación en [{}]: {}", path, authException.getMessage());
+
+        ErrorResponse errorResponse = buildAuthError(path, authException);
+        writeJsonResponse(response, errorResponse);
     }
 
     /**
-     * Maneja casos de acceso denegado.
+     * Maneja errores de autorización (acceso denegado) cuando el usuario autenticado
+     * no tiene permisos suficientes.
      *
      * @param request La petición HTTP.
      * @param response La respuesta HTTP.
@@ -59,40 +69,39 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
     @Override
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
-                       org.springframework.security.access.AccessDeniedException ex) throws IOException {
-        log.warn("Acceso denegado en {}: {}", request.getRequestURI(), ex.getMessage());
+                       AccessDeniedException ex) throws IOException {
+        String path = request.getRequestURI();
+        log.warn("Acceso denegado en [{}]: {}", path, ex.getMessage());
+
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
-                "Permisos insuficientes para este recurso",
+                "Permisos insuficientes para acceder a este recurso",
                 "ACCESS_DENIED",
-                request.getRequestURI(),
+                path,
                 HttpStatus.FORBIDDEN.value()
         );
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(HttpStatus.FORBIDDEN.value());
-        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+        writeJsonResponse(response, errorResponse);
     }
 
     /**
-     * Construye una respuesta de error a partir de una excepción de autenticación.
-     * Recorrerá la cadena de excepciones para detectar si el token ha expirado.
+     * Construye una respuesta de error personalizada según el tipo de excepción de autenticación.
+     * Detecta si el token ha expirado recorriendo las causas de la excepción.
      *
-     * @param request La petición HTTP.
-     * @param ex La excepción de autenticación.
-     * @return Un objeto {@code ErrorResponse} con la información de error correspondiente.
+     * @param path Ruta del recurso al que se intentó acceder.
+     * @param ex   Excepción de autenticación lanzada.
+     * @return {@link ErrorResponse} con detalles del error.
      */
-    private ErrorResponse buildAuthError(HttpServletRequest request, AuthenticationException ex) {
-        log.warn("Procesando excepción de autenticación para {}: {}", request.getRequestURI(), ex.getMessage());
+    private ErrorResponse buildAuthError(String path, AuthenticationException ex) {
         Throwable cause = ex;
         while (cause != null) {
             String message = cause.getMessage();
             if (message != null && message.toLowerCase().contains("expired")) {
-                log.debug("Token expirado detectado en la cadena de excepciones para {}.", request.getRequestURI());
+                log.debug("Token expirado detectado para [{}].", path);
                 return new ErrorResponse(
                         LocalDateTime.now(),
-                        "Token expirado",
+                        "El token de autenticación ha expirado",
                         "TOKEN_EXPIRED",
-                        request.getRequestURI(),
+                        path,
                         HttpStatus.UNAUTHORIZED.value()
                 );
             }
@@ -100,10 +109,23 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
         }
         return new ErrorResponse(
                 LocalDateTime.now(),
-                "Error de validación del token",
+                "Token de autenticación inválido o ausente",
                 "TOKEN_INVALID",
-                request.getRequestURI(),
+                path,
                 HttpStatus.UNAUTHORIZED.value()
         );
+    }
+
+    /**
+     * Serializa y escribe un {@link ErrorResponse} como JSON en la respuesta HTTP.
+     *
+     * @param response      Objeto HTTP donde se escribe.
+     * @param errorResponse Contenido del error a devolver.
+     * @throws IOException Si ocurre un error de escritura.
+     */
+    private void writeJsonResponse(HttpServletResponse response, ErrorResponse errorResponse) throws IOException {
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(errorResponse.status());
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 }
