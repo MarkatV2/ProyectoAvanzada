@@ -1,5 +1,6 @@
 package co.edu.uniquindio.proyecto.entity.user;
 
+import lombok.Builder;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;

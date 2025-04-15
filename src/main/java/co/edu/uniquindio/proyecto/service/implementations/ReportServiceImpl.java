@@ -124,18 +124,18 @@ public class ReportServiceImpl implements ReportService {
     /**
      * Obtiene reportes cercanos a una ubicación geográfica específica, con paginación y filtro por radio.
      *
-     * @param latitude  Latitud de la ubicación central.
-     * @param longitude Longitud de la ubicación central.
-     * @param radiusKm  Radio en kilómetros (por defecto 10km si es nulo).
-     * @param page      Número de página (por defecto 1).
-     * @param size      Tamaño de página (máximo 100, por defecto 30).
+     * @param latitude   Latitud de la ubicación central.
+     * @param longitude  Longitud de la ubicación central.
+     * @param radiusKm   Radio en kilómetros (por defecto 10km si es nulo).
+     * @param page       Número de página (por defecto 1).
+     * @param size       Tamaño de página (máximo 100, por defecto 30).
+     * @param categories
      * @return PaginatedReportResponse con los reportes encontrados cerca de la ubicación especificada.
      * @throws IllegalArgumentException si las coordenadas son inválidas.
      */
     @Override
     public PaginatedReportResponse getReportsNearLocation(double latitude, double longitude, Double radiusKm,
-            Integer page, Integer size
-    ) {
+            Integer page, Integer size, List<String> categories) {
         validateCoordinates(latitude, longitude);
         log.info("Buscando reportes cerca de la ubicación [lat: {}, lon: {}] con radio={}km", latitude, longitude, radiusKm);
 
@@ -147,7 +147,12 @@ public class ReportServiceImpl implements ReportService {
         GeoJsonPoint location = new GeoJsonPoint(longitude, latitude); // GeoJSON usa [lon, lat]
 
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
-        Page<Report> reportsPage = reportRepository.findNearbyReports(location, radiusMeters, pageable);
+        Page<Report> reportsPage;
+        if (categories != null && !categories.isEmpty()) {
+            reportsPage = reportRepository.findNearbyReportsByCategoryNames(location, radiusMeters, categories, pageable);
+        } else {
+            reportsPage = reportRepository.findNearbyReports(location, radiusMeters, pageable);
+        }
 
         log.debug("Se encontraron {} reportes cerca de la ubicación (página {} de {})",
                 reportsPage.getNumberOfElements(), pageNumber, reportsPage.getTotalPages());

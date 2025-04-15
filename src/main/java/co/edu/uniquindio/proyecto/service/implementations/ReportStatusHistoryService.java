@@ -9,7 +9,13 @@ import co.edu.uniquindio.proyecto.service.mapper.ReportStatusHistoryMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Servicio para la gestión del historial de estados de reportes.
@@ -53,5 +59,25 @@ public class ReportStatusHistoryService {
         return historyMapper.toResponse(history);
     }
 
-    //AGREGAR LAS COSULTAS PERZONALIZADAS
+    /**
+     * Obtiene el historial de cambios de estado de un reporte dentro de un rango de fechas,
+     * con paginación.
+     *
+     * @param reportId  El ObjectId del reporte.
+     * @param startDate La fecha de inicio.
+     * @param endDate   La fecha de fin.
+     * @param page      Número de página (0-based).
+     * @param size      Tamaño de página.
+     * @return Una página de registros filtrados por el rango de fechas.
+     */
+    public List<ReportStatusHistoryResponse> getHistoryByDateRange(String reportId, LocalDateTime startDate, LocalDateTime endDate, int page, int size) {
+        log.info("Solicitando historial para el reporte {} desde {} hasta {}. Página: {}, Tamaño: {}",
+                reportId, startDate, endDate, page, size);
+        Pageable pageable = PageRequest.of(page-1, size);
+        Page<ReportStatusHistory> historyPage =
+                historyRepository.findByReportIdAndDateRange(new ObjectId(reportId), startDate, endDate, pageable);
+        log.info("Historial filtrado por fecha: {} registros totales", historyPage.getTotalElements());
+        return historyMapper.toListResponse(historyPage.getContent());
+    }
+
 }

@@ -1,9 +1,12 @@
 package co.edu.uniquindio.proyecto.service.implementations;
 
+import co.edu.uniquindio.proyecto.exception.user.UserNotFoundException;
+import co.edu.uniquindio.proyecto.repository.UserRepository;
 import co.edu.uniquindio.proyecto.service.interfaces.AuthorizationService;
 import co.edu.uniquindio.proyecto.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class AuthorizationServiceImplements implements AuthorizationService {
 
     private final SecurityUtils securityUtils;
+    private final UserRepository userRepository;
 
     /**
      * Verifica si el usuario autenticado es el mismo que el solicitado o si posee el rol ADMIN.
@@ -32,8 +36,10 @@ public class AuthorizationServiceImplements implements AuthorizationService {
      */
     @Override
     public boolean isSelfOrAdmin(String userId) {
-        log.info("Verificando si el usuario actual es el mismo o tiene permisos de administrador. userId: {}", userId);
 
+        userRepository.findById(new ObjectId(userId)).orElseThrow(() -> new UserNotFoundException(userId));
+
+        log.info("Verificando si el usuario actual es el mismo o tiene permisos de administrador. userId: {}", userId);
         boolean result = securityUtils.isSelfOrAdmin(userId);
 
         if (result) {
@@ -55,8 +61,10 @@ public class AuthorizationServiceImplements implements AuthorizationService {
      */
     @Override
     public boolean isSelf(String userId) {
-        log.info("Verificando coincidencia con usuario autenticado. userId objetivo: {}", userId);
 
+        userRepository.findById(new ObjectId(userId)).orElseThrow(() -> new UserNotFoundException(userId));
+
+        log.info("Verificando coincidencia con usuario autenticado. userId objetivo: {}", userId);
         String currentUserId = securityUtils.getCurrentUserId();
         boolean result = userId != null && userId.equals(currentUserId);
 

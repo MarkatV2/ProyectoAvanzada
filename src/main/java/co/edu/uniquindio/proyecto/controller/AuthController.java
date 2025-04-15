@@ -1,9 +1,7 @@
 package co.edu.uniquindio.proyecto.controller;
 
 import co.edu.uniquindio.proyecto.dto.response.SuccessResponse;
-import co.edu.uniquindio.proyecto.dto.user.JwtResponse;
-import co.edu.uniquindio.proyecto.dto.user.LoginRequest;
-import co.edu.uniquindio.proyecto.dto.user.PasswordResetRequest;
+import co.edu.uniquindio.proyecto.dto.user.*;
 import co.edu.uniquindio.proyecto.entity.auth.VerificationCodeType;
 import co.edu.uniquindio.proyecto.service.interfaces.AuthService;
 import co.edu.uniquindio.proyecto.service.interfaces.VerificationService;
@@ -85,10 +83,26 @@ public class AuthController {
      * @param request DTO que contiene el código de validación y la nueva contraseña.
      * @return Respuesta indicando que la contraseña fue actualizada exitosamente.
      */
-    @PatchMapping("/password")
+    @PatchMapping("/users/password")
     public ResponseEntity<SuccessResponse> confirmReset(@Valid @RequestBody PasswordResetRequest request) {
         log.info("🔄 Confirmando restablecimiento de contraseña con código: {}", request.code());
         verificationService.resetPasswordWithCode(request.code(), request.newPassword());
         return ResponseEntity.ok(new SuccessResponse("Contraseña actualizada exitosamente"));
     }
+
+
+    /**
+     * Endpoint para refrescar el token de acceso mediante refresh token.
+     *
+     * @param request Objeto que contiene el refresh token.
+     * @return Un {@link JwtResponse} con el nuevo token de acceso.
+     */
+    @PostMapping("/accessTokens")
+    public ResponseEntity<JwtAccesResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        log.info("Recibida solicitud de refresco de token.");
+        JwtAccesResponse response = authService.refreshAccessToken(request.refreshToken());
+        return ResponseEntity.ok(response);
+    }
+
 }
+

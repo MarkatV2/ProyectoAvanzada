@@ -53,10 +53,11 @@ public class ReportController {
             @RequestParam double longitud,
             @RequestParam(required = false) Double radio,
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) List<String> categories ) {
 
         log.info("📍 Obteniendo reportes cerca de: ({}, {}), radio: {}km", latitud, longitud, radio);
-        PaginatedReportResponse response = reportService.getReportsNearLocation(latitud, longitud, radio, page, size);
+        PaginatedReportResponse response = reportService.getReportsNearLocation(latitud, longitud, radio, page, size, categories);
         return ResponseEntity.ok(response);
     }
 

@@ -10,9 +10,12 @@ import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ReportStatusHistoryMapper {
+
+    List<ReportStatusHistoryResponse> toListResponse (List<ReportStatusHistory> reportStatusHistories);
 
     // Mapeo para respuesta individual
     @Mapping(target = "id", source = "id", qualifiedByName = "objectIdToString")

@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("@authorizationService.isSelf(#userId)")
+@PreAuthorize("@authorizationService.isSelf(#id)")
 public @interface CheckSelfPermission {
 }
 

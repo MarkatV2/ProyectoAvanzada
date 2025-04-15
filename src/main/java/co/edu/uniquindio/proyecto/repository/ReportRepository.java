@@ -68,13 +68,25 @@ public interface ReportRepository extends MongoRepository<Report, ObjectId> {
      * @return Un {@link Optional} que contiene el reporte si existe, {@link Optional#empty()}
      *         si no se encuentra o si el reporte está marcado como "DELETED".
      */
-    @Override
+
+
     @Query("""
-        {
-            '_id': ?0,
-            'reportStatus': { $ne: 'DELETED' }
+{
+    'location': {
+        $near: {
+            $geometry: ?0,
+            $maxDistance: ?1
         }
-    """)
-    Optional<Report> findById(ObjectId objectId);
+    },
+    'reportStatus': 'VERIFIED',
+    'categories.name': { $in: ?2 }
+}
+""")
+    Page<Report> findNearbyReportsByCategoryNames(
+            GeoJsonPoint location,
+            double maxDistanceInMeters,
+            List<String> categoryNames,
+            Pageable pageable
+    );
 }
 

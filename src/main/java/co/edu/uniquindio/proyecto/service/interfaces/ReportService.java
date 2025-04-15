@@ -6,7 +6,6 @@ import co.edu.uniquindio.proyecto.dto.report.PaginatedReportResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
 import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportStatusUpdate;
-import org.bson.types.ObjectId;
 
 import java.util.List;
 /**
@@ -33,15 +32,16 @@ public interface ReportService {
     /**
      * Obtiene reportes cercanos a una ubicación geográfica.
      *
-     * @param latitude  latitud del punto de búsqueda.
-     * @param longitude longitud del punto de búsqueda.
-     * @param radiusKm  radio en kilómetros (puede ser nulo).
-     * @param page      número de página.
-     * @param size      tamaño de página.
+     * @param latitude   latitud del punto de búsqueda.
+     * @param longitude  longitud del punto de búsqueda.
+     * @param radiusKm   radio en kilómetros (puede ser nulo).
+     * @param page       número de página.
+     * @param size       tamaño de página.
+     * @param categories
      * @return lista paginada de reportes cercanos.
      */
     PaginatedReportResponse getReportsNearLocation(double latitude, double longitude, Double radiusKm,
-                                                   Integer page, Integer size);
+                                                   Integer page, Integer size, List<String> categories);
 
     /**
      * Elimina lógicamente un reporte.

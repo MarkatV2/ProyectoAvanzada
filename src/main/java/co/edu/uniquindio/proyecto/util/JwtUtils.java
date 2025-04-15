@@ -1,10 +1,14 @@
 package co.edu.uniquindio.proyecto.util;
 
 import co.edu.uniquindio.proyecto.entity.user.User;
+import co.edu.uniquindio.proyecto.exception.InvalidRefreshTokenException;
+import co.edu.uniquindio.proyecto.exception.RefreshTokenExpiredException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -28,6 +32,8 @@ import java.util.stream.Collectors;
 public class JwtUtils {
 
     private static final long EXPIRATION_TIME = 3600000; // 1 hora en milisegundos
+    // Tiempo de expiración del refresh token: 30 días (en milisegundos)
+    private static final long REFRESH_EXPIRATION_TIME = 30L * 24 * 3600 * 1000; // 30 días
 
     /**
      * Genera un token JWT para el usuario proporcionado.
@@ -42,6 +48,24 @@ public class JwtUtils {
         Instant expiration = calculateExpiration(now);
         String token = buildJwtToken(tokenData, now, expiration);
         log.info("Token JWT generado para el usuario {} (expira a las {})", user.getUsername(), expiration);
+        return token;
+    }
+
+    /**
+     * Genera un refresh token para el usuario proporcionado.
+     * El refresh token tendrá una expiración de 30 días y contendrá únicamente el claim 'userId'.
+     *
+     * @param user Usuario para el cual se genera el refresh token.
+     * @return Refresh token JWT generado.
+     */
+    public String generateRefreshToken(User user) {
+        log.debug("Generando refresh token para el usuario: {}", user.getUsername());
+        // En el refresh token se incluye sólo el 'userId' (además del subject que es el username)
+        TokenData tokenData = new TokenData(user.getUsername(), user.getId().toString(), Collections.emptyList());
+        Instant now = getCurrentInstant();
+        Instant expiration = now.plusMillis(REFRESH_EXPIRATION_TIME);
+        String token = buildJwtToken(tokenData, now, expiration);
+        log.info("Refresh token generado para el usuario {} (expira a las {})", user.getUsername(), expiration);
         return token;
     }
 
@@ -126,6 +150,49 @@ public class JwtUtils {
                 .build()
                 .parseSignedClaims(token);
     }
+
+
+    /**
+     * Valida si un refresh token es válido. No retorna información del token,
+     * solo verifica que esté bien firmado, no haya expirado y tenga un formato válido.
+     *
+     * @param token El refresh token a validar.
+     * @throws RefreshTokenExpiredException si el token ha expirado.
+     * @throws InvalidRefreshTokenException si el token es inválido.
+     */
+    public void validateRefreshToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(KeyUtils.getPublicKey())
+                    .build()
+                    .parseSignedClaims(token);
+
+            log.debug("Refresh token válido.");
+        } catch (ExpiredJwtException ex) {
+            log.warn("Refresh token expirado.");
+            throw new RefreshTokenExpiredException("El refresh token ha expirado", ex);
+        } catch (JwtException ex) {
+            log.warn("Refresh token inválido.");
+            throw new InvalidRefreshTokenException("El refresh token es inválido", ex);
+        }
+    }
+
+    /**
+     * Extrae el userId de un refresh token JWT válido.
+     *
+     * @param refreshToken El refresh token JWT.
+     * @return El ID del usuario como cadena.
+     * @throws JwtException si el token es inválido o no puede parsearse.
+     */
+    public String extractUserId(String refreshToken) {
+        Jws<Claims> jwsClaims = Jwts.parser()
+                .verifyWith(KeyUtils.getPublicKey())
+                .build()
+                .parseSignedClaims(refreshToken);
+
+        return jwsClaims.getPayload().get("userId", String.class);
+    }
+
 
     /**
      * Clase interna para agrupar los datos necesarios para la generación del token.

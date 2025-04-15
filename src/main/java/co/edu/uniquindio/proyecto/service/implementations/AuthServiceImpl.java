@@ -1,15 +1,20 @@
 package co.edu.uniquindio.proyecto.service.implementations;
 
+import co.edu.uniquindio.proyecto.dto.user.JwtAccesResponse;
 import co.edu.uniquindio.proyecto.dto.user.JwtResponse;
 import co.edu.uniquindio.proyecto.dto.user.LoginRequest;
 import co.edu.uniquindio.proyecto.entity.user.User;
 import co.edu.uniquindio.proyecto.exception.auth.AccountDisabledException;
 import co.edu.uniquindio.proyecto.exception.user.InvalidPasswordException;
 import co.edu.uniquindio.proyecto.exception.user.UserNotFoundException;
+import co.edu.uniquindio.proyecto.repository.UserRepository;
 import co.edu.uniquindio.proyecto.service.interfaces.AuthService;
 import co.edu.uniquindio.proyecto.util.JwtUtils;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +37,7 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
     private final UserDetailsServiceImplements userDetailsService;
 
@@ -63,9 +69,9 @@ public class AuthServiceImpl implements AuthService {
             verifyUserStatus(user);
 
             // Generar y retornar el token
-            String token = generateJwtToken(user);
+            JwtResponse tokenResponse = generateJwtToken(user);
             log.info("Usuario '{}' autenticado exitosamente", user.getUsername());
-            return new JwtResponse(token);
+            return tokenResponse;
 
         } catch (BadCredentialsException ex) {
             log.warn("Credenciales incorrectas para el usuario '{}'", request.userName(), ex);
@@ -81,6 +87,8 @@ public class AuthServiceImpl implements AuthService {
             throw new AuthenticationServiceException("Error interno durante la autenticación", ex);
         }
     }
+
+
     /**
      * Valida que los campos del request no sean nulos o vacíos.
      *
@@ -145,8 +153,28 @@ public class AuthServiceImpl implements AuthService {
      * @param user Usuario autenticado.
      * @return Token JWT válido para el usuario.
      */
-    private String generateJwtToken(User user) {
+    private JwtResponse generateJwtToken(User user) {
         log.debug("Generando JWT para el usuario '{}'", user.getUsername());
-        return jwtUtils.generateToken(user);
+        return new JwtResponse(jwtUtils.generateToken(user), jwtUtils.generateRefreshToken(user));
     }
+
+
+    @Override
+    public JwtAccesResponse refreshAccessToken(String refreshToken) {
+        // 1. Validar refresh token
+        jwtUtils.validateRefreshToken(refreshToken);
+
+        //2. Extraer UserId
+        String userId = jwtUtils.extractUserId(refreshToken);
+
+        // 3. Buscar usuario
+        User user = userRepository.findById(new ObjectId(userId))
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con ID: " + userId));
+
+        // 4. Generar nuevo access token
+        String newAccessToken = jwtUtils.generateToken(user);
+        return new JwtAccesResponse(newAccessToken);
+    }
+
+
 }

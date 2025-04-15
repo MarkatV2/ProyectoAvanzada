@@ -6,10 +6,14 @@ import co.edu.uniquindio.proyecto.dto.report.ReportStatusHistoryResponse;
 import co.edu.uniquindio.proyecto.service.implementations.ReportStatusHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Controlador para consultar el historial de estados de reportes.
@@ -36,21 +40,29 @@ public class ReportStatusHistoryController {
         return ResponseEntity.ok(response);
     }
 
-    /*
-     * Endpoint para obtener de forma paginada el historial de estados para un reporte.
+    /**
+     * Obtiene el historial de cambios de estado de un reporte dentro de un rango de fechas, con paginación.
      *
-     * @param reportId ID del reporte.
-     * @param page     Número de página (por defecto 0).
-     * @param size     Tamaño de página (por defecto 10).
-     * @return ResponseEntity con el ReportStatusHistoryPaginatedResponse.
+     * @param reportId  El ID del reporte.
+     * @param startDate Fecha de inicio (formato ISO).
+     * @param endDate   Fecha de fin (formato ISO).
+     * @param page      Número de página (comienza en 0).
+     * @param size      Tamaño de página.
+     * @return Página de registros filtrados según el rango de fechas.
+     */
+    @GetMapping("/{reportId}/date-range")
+    public ResponseEntity<List<ReportStatusHistoryResponse>> getHistoryByDateRange(
+            @PathVariable("reportId") String reportId,
+            @RequestParam("startDate") LocalDateTime startDate,
+            @RequestParam("endDate") LocalDateTime endDate,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
 
-    @GetMapping("/{reportId}")
-    public ResponseEntity<ReportStatusHistoryPaginatedResponse> getHistoriesByReportId(
-            @PathVariable String reportId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        log.info("Recibida petición para obtener historial del reporte con ID: {} (página: {}, tamaño: {})", reportId, page, size);
-        ReportStatusHistoryPaginatedResponse response = historyService.getHistoriesByReportId(reportId, PageRequest.of(page, size));
-        return ResponseEntity.ok(response);
-    }  */
+
+        log.info("Solicitando historial del reporte {} desde {} hasta {} (página {}, tamaño {})",
+                reportId, startDate, endDate, page, size);
+
+        List<ReportStatusHistoryResponse> historyPage = historyService.getHistoryByDateRange(reportId, startDate, endDate, page, size);
+        return ResponseEntity.ok(historyPage);
+    }
 }

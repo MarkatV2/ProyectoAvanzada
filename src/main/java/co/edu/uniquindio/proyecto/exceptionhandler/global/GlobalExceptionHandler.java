@@ -3,6 +3,7 @@ package co.edu.uniquindio.proyecto.exceptionhandler.global;
 import co.edu.uniquindio.proyecto.dto.response.ErrorResponse;
 import co.edu.uniquindio.proyecto.dto.response.ValidationErrorResponse;
 import co.edu.uniquindio.proyecto.exception.global.IdInvalidException;
+import co.edu.uniquindio.proyecto.exception.global.ServiceUnavailableException;
 import co.edu.uniquindio.proyecto.exceptionhandler.ErrorResponseBuilder;
 import com.mongodb.MongoSocketOpenException;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import javax.naming.ServiceUnavailableException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,12 +57,12 @@ public class GlobalExceptionHandler {
      * @param request Contexto de la petición.
      * @return Respuesta HTTP con error 500 (Internal Server Error).
      */
-    @ExceptionHandler(Exception.class)
+    /* @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex, WebRequest request) {
         // Log de error detallado
         log.error("Error interno del servidor: {}", ex.getMessage(), ex);
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
-    }
+    } */
 
     /**
      * Maneja las excepciones de validación de parámetros en la entrada de la solicitud.
