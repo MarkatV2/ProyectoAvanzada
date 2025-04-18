@@ -15,6 +15,7 @@ import java.util.List;
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ReportMapper {
 
+
     List<ReportResponse> toResponseList(List<Report> reports);
 
     @Mapping(target = "location", expression = "java(toGeoJsonPoint(request.latitude(), request.longitude()))")

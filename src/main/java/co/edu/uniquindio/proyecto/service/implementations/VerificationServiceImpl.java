@@ -64,15 +64,6 @@ public class VerificationServiceImpl implements VerificationService {
         log.info("Correo enviado a {} para tipo de verificación {}", user.getEmail(), type);
     }
 
-    /**
-     * Genera un código aleatorio de 6 dígitos.
-     *
-     * @return código de verificación generado.
-     */
-    private String generateRandomCode() {
-        SecureRandom random = new SecureRandom();
-        return String.format("%06d", random.nextInt(999999));
-    }
 
     /**
      * Valida el código de activación y activa la cuenta del usuario si es válido.
@@ -87,52 +78,7 @@ public class VerificationServiceImpl implements VerificationService {
         validateUserAccount(verificationCode);
     }
 
-    /**
-     * Valida que el código exista y no haya expirado.
-     *
-     * @param code el código a validar.
-     * @return la entidad de código validado.
-     * @throws InvalidCodeException si no se encuentra el código.
-     * @throws CodeExpiredException si ha expirado.
-     */
-    private VerificationCode validateCode(String code) {
-        log.info("Validando código de verificación: {}", code);
 
-        VerificationCode verificationCode = codeRepository.findByCode(code)
-                .orElseThrow(() -> {
-                    log.warn("Código inválido: {}", code);
-                    return new InvalidCodeException("Código inválido");
-                });
-
-        if (LocalDateTime.now().isAfter(verificationCode.getExpiresAt())) {
-            log.warn("Código expirado: {}", code);
-            codeRepository.delete(verificationCode);
-            throw new CodeExpiredException("El código ha expirado");
-        }
-
-        log.debug("Código válido: {} con expiración: {}", code, verificationCode.getExpiresAt());
-        return verificationCode;
-    }
-
-    /**
-     * Activa la cuenta del usuario y elimina el código asociado.
-     *
-     * @param verificationCode el código validado.
-     * @throws UserNotFoundException si no se encuentra el usuario.
-     */
-    private void validateUserAccount(VerificationCode verificationCode) {
-        User user = userRepository.findById(verificationCode.getUserId())
-                .orElseThrow(() -> {
-                    log.warn("Usuario no encontrado con ID: {}", verificationCode.getUserId());
-                    return new UserNotFoundException(verificationCode.getUserId().toString());
-                });
-
-        user.setAccountStatus(AccountStatus.ACTIVATED);
-        userRepository.save(user);
-        codeRepository.delete(verificationCode);
-
-        log.info("Cuenta activada y código eliminado para usuario: {}", user.getEmail());
-    }
 
     /**
      * Reenvía un nuevo código de verificación, eliminando códigos anteriores del usuario.
@@ -199,6 +145,63 @@ public class VerificationServiceImpl implements VerificationService {
         codeRepository.delete(verificationCode);
 
         log.info("Contraseña restablecida y código eliminado para el usuario: {}", user.getEmail());
+    }
+
+    /**
+     * Genera un código aleatorio de 6 dígitos.
+     *
+     * @return código de verificación generado.
+     */
+    private String generateRandomCode() {
+        SecureRandom random = new SecureRandom();
+        return String.format("%06d", random.nextInt(999999));
+    }
+
+    /**
+     * Valida que el código exista y no haya expirado.
+     *
+     * @param code el código a validar.
+     * @return la entidad de código validado.
+     * @throws InvalidCodeException si no se encuentra el código.
+     * @throws CodeExpiredException si ha expirado.
+     */
+    private VerificationCode validateCode(String code) {
+        log.info("Validando código de verificación: {}", code);
+
+        VerificationCode verificationCode = codeRepository.findByCode(code)
+                .orElseThrow(() -> {
+                    log.warn("Código inválido: {}", code);
+                    return new InvalidCodeException("Código inválido");
+                });
+
+        if (LocalDateTime.now().isAfter(verificationCode.getExpiresAt())) {
+            log.warn("Código expirado: {}", code);
+            codeRepository.delete(verificationCode);
+            throw new CodeExpiredException("El código ha expirado");
+        }
+
+        log.debug("Código válido: {} con expiración: {}", code, verificationCode.getExpiresAt());
+        return verificationCode;
+    }
+
+    /**
+     * Activa la cuenta del usuario y elimina el código asociado.
+     *
+     * @param verificationCode el código validado.
+     * @throws UserNotFoundException si no se encuentra el usuario.
+     */
+    private void validateUserAccount(VerificationCode verificationCode) {
+        User user = userRepository.findById(verificationCode.getUserId())
+                .orElseThrow(() -> {
+                    log.warn("Usuario no encontrado con ID: {}", verificationCode.getUserId());
+                    return new UserNotFoundException(verificationCode.getUserId().toString());
+                });
+
+        user.setAccountStatus(AccountStatus.ACTIVATED);
+        userRepository.save(user);
+        codeRepository.delete(verificationCode);
+
+        log.info("Cuenta activada y código eliminado para usuario: {}", user.getEmail());
     }
 }
 

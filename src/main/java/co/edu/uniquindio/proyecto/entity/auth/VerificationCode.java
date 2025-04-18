@@ -13,18 +13,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 public class VerificationCode {
     @Id
     private ObjectId id;
-
-    @Indexed(unique = true)
     private String code;
-
-    @Field("user_id")
     private ObjectId userId;
-
-    @Field("created_at")
     private LocalDateTime createdAt;
-
-    @Field("expires_at")
     private LocalDateTime expiresAt;
     private VerificationCodeType verificationCodeType;
-
 }

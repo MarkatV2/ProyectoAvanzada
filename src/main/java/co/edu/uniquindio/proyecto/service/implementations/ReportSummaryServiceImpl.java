@@ -1,10 +1,13 @@
 package co.edu.uniquindio.proyecto.service.implementations;
 
+import co.edu.uniquindio.proyecto.dto.report.PaginatedReportSummaryResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportFilterDTO;
 import co.edu.uniquindio.proyecto.dto.report.ReportSummaryDTO;
 import co.edu.uniquindio.proyecto.entity.category.CategoryRef;
 import co.edu.uniquindio.proyecto.entity.report.Report;
+import co.edu.uniquindio.proyecto.exception.report.CreatingReportSummaryPdfException;
 import co.edu.uniquindio.proyecto.service.interfaces.ReportSummaryService;
+import co.edu.uniquindio.proyecto.service.mapper.ReportSummaryMapper;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +43,7 @@ import java.util.List;
 public class ReportSummaryServiceImpl implements ReportSummaryService {
 
     private final MongoTemplate mongoTemplate;
+    private final ReportSummaryMapper reportSummaryMapper;
 
 
     /**
@@ -50,17 +54,53 @@ public class ReportSummaryServiceImpl implements ReportSummaryService {
      * @throws IllegalArgumentException si las fechas son inválidas.
      */
     @Override
-    public List<ReportSummaryDTO> getFilteredReports(ReportFilterDTO filter) {
+    public PaginatedReportSummaryResponse getFilteredReports(ReportFilterDTO filter, int page, int size) {
         validateDates(filter);
 
         Criteria criteria = buildCriteria(filter);
         Query query = new Query(criteria);
 
-        log.debug("Ejecutando query: {}", query);
-        List<Report> reports = mongoTemplate.find(query, Report.class);
-        log.info("Reportes encontrados: {}", reports.size());
+        long total = mongoTemplate.count(query, Report.class); // <-- importante
+        query.skip((long) (page - 1) * size).limit(size);       // <-- paginación real
 
-        return mapToDTOs(reports);
+        log.debug("Ejecutando query paginada: {}", query);
+        List<Report> reports = mongoTemplate.find(query, Report.class);
+        log.info("Reportes encontrados (pagina): {}", reports.size());
+
+        List<ReportSummaryDTO> content = reportSummaryMapper.toReportSummaryDto(reports);
+
+        return new PaginatedReportSummaryResponse(content, page, size, total,
+                (int) Math.ceil((double) total / size));
+    }
+
+    /**
+     * Genera un archivo PDF a partir de una lista de reportes resumidos.
+     *
+     * @param paginated Lista de reportes a incluir en el PDF.
+     * @return Arreglo de bytes que representa el contenido del PDF generado.
+     * @throws RuntimeException si ocurre un error durante la generación del PDF.
+     */
+    @Override
+    public byte[] generatePdf(PaginatedReportSummaryResponse paginated) {
+        log.info("Iniciando generación de PDF para {} reportes (página {}/{})",
+                paginated.content().size(), paginated.page(), paginated.totalPages());
+
+        String html = buildHtmlTable(paginated);
+
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.useFastMode();
+            builder.withHtmlContent(html, null);
+            builder.toStream(outputStream);
+            builder.run();
+
+            log.info("PDF generado exitosamente. Tamaño en bytes: {}", outputStream.size());
+            return outputStream.toByteArray();
+
+        } catch (IOException e) {
+            log.error("Error generando el PDF", e);
+            throw new CreatingReportSummaryPdfException(e.getMessage());
+        }
     }
 
 
@@ -138,84 +178,45 @@ public class ReportSummaryServiceImpl implements ReportSummaryService {
         return km / 6371.0;
     }
 
-    /**
-     * Transforma una lista de entidades Report a DTOs resumidos.
-     *
-     * @param reports Lista de reportes desde la base de datos.
-     * @return Lista de ReportSummaryDTO.
-     */
-    private List<ReportSummaryDTO> mapToDTOs(List<Report> reports) {
-        return reports.stream()
-                .map(report -> new ReportSummaryDTO(
-                        report.getTitle(),
-                        report.getDescription(),
-                        report.getCategoryList().stream()
-                                .map(CategoryRef::getName)
-                                .toList(),
-                        report.getReportStatus().name(),
-                        report.getCreatedAt(),
-                        report.getLocation().getY(), // latitud
-                        report.getLocation().getX()  // longitud
-                ))
-                .toList();
-    }
-
-
-    /**
-     * Genera un archivo PDF a partir de una lista de reportes resumidos.
-     *
-     * @param reports Lista de reportes a incluir en el PDF.
-     * @return Arreglo de bytes que representa el contenido del PDF generado.
-     * @throws RuntimeException si ocurre un error durante la generación del PDF.
-     */
-    @Override
-    public byte[] generatePdf(List<ReportSummaryDTO> reports) {
-        log.info("Iniciando generación de PDF para {} reportes", reports.size());
-
-        String html = buildHtmlTable(reports);
-
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            PdfRendererBuilder builder = new PdfRendererBuilder();
-            builder.useFastMode();
-            builder.withHtmlContent(html, null);
-            builder.toStream(outputStream);
-            builder.run();
-
-            log.info("PDF generado exitosamente. Tamaño en bytes: {}", outputStream.size());
-            return outputStream.toByteArray();
-
-        } catch (IOException e) {
-            log.error("Error generando el PDF", e);
-            throw new RuntimeException("Error generando PDF", e);
-        }
-    }
 
 
     /**
      * Construye una representación HTML de una tabla con los datos proporcionados en la lista de reportes.
      * Usa una plantilla HTML que contiene un marcador {{rows}}, el cual es reemplazado por las filas generadas dinámicamente.
      *
-     * @param reports Lista de objetos {@link ReportSummaryDTO} que representan los reportes a mostrar en la tabla.
+     * @param paginated Lista de objetos {@link ReportSummaryDTO} que representan los reportes a mostrar en la tabla.
      * @return Cadena de texto HTML con la tabla completamente generada y embebida en la plantilla.
      */
-    private String buildHtmlTable(List<ReportSummaryDTO> reports) {
-        String template = loadHtmlTemplate();
-        StringBuilder rowsBuilder = new StringBuilder();
+    private String buildHtmlTable(PaginatedReportSummaryResponse paginated) {
+        String template = loadHtmlTemplate(); // sigue siendo tu base
 
-        for (ReportSummaryDTO r : reports) {
+        StringBuilder rowsBuilder = new StringBuilder();
+        for (ReportSummaryDTO r : paginated.content()) {
             rowsBuilder.append("<tr>")
+                    .append("<td>").append(escapeHtml(r.reportId())).append("</td>")
                     .append("<td>").append(escapeHtml(r.title())).append("</td>")
                     .append("<td>").append(escapeHtml(r.description())).append("</td>")
                     .append("<td>").append(escapeHtml(String.join(", ", r.categoryNames()))).append("</td>")
                     .append("<td>").append(escapeHtml(r.status())).append("</td>")
-                    .append("<td>").append(escapeHtml(r.createdAt().toString())).append("</td>")
+                    .append("<td>").append(r.createdAt()).append("</td>")
                     .append("<td>").append(r.latitude()).append("</td>")
                     .append("<td>").append(r.longitude()).append("</td>")
                     .append("</tr>");
         }
 
-        return template.replace("{{rows}}", rowsBuilder.toString());
+        String metadata = String.format(
+                "<p><strong>Total de reportes:</strong> %d<br />" +
+                        "<strong>Página:</strong> %d<br />" +
+                        "<strong>Total páginas:</strong> %d<br />" +
+                        "<strong>Tamaño de página:</strong> %d </p>",
+                paginated.totalElements(), paginated.page(), paginated.totalPages(), paginated.size()
+        );
+
+        return template
+                .replace("{{metadata}}", metadata)
+                .replace("{{rows}}", rowsBuilder.toString());
     }
+
 
 
     /**

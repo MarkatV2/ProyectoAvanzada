@@ -9,4 +9,8 @@ public class CategoryRef {
     @Id
     private String id;
     private String name;
+
+    public CategoryRef(String name) {
+        this.name = name;
+    }
 }

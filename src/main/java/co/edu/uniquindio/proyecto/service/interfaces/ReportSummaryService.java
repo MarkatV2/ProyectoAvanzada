@@ -1,5 +1,6 @@
 package co.edu.uniquindio.proyecto.service.interfaces;
 
+import co.edu.uniquindio.proyecto.dto.report.PaginatedReportSummaryResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportFilterDTO;
 import co.edu.uniquindio.proyecto.dto.report.ReportSummaryDTO;
 
@@ -16,7 +17,7 @@ public interface ReportSummaryService {
      * @param filter criterios de filtrado.
      * @return lista de reportes filtrados.
      */
-    List<ReportSummaryDTO> getFilteredReports(ReportFilterDTO filter);
+    PaginatedReportSummaryResponse getFilteredReports(ReportFilterDTO filter, int page, int size);
 
     /**
      * Genera un archivo PDF con el resumen de los reportes.
@@ -24,6 +25,6 @@ public interface ReportSummaryService {
      * @param reports lista de reportes a incluir en el PDF.
      * @return contenido del PDF en bytes.
      */
-    byte[] generatePdf(List<ReportSummaryDTO> reports);
+    byte[] generatePdf(PaginatedReportSummaryResponse paginated);
 }
 

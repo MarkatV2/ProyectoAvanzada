@@ -1,5 +1,6 @@
 package co.edu.uniquindio.proyecto.controller;
 
+import co.edu.uniquindio.proyecto.dto.report.PaginatedReportSummaryResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportFilterDTO;
 import co.edu.uniquindio.proyecto.dto.report.ReportSummaryDTO;
 import co.edu.uniquindio.proyecto.service.interfaces.ReportSummaryService;
@@ -10,10 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -40,11 +38,15 @@ public class ReportSummaryController {
      */
     @PostMapping("/pdf")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<byte[]> generatePdf(@RequestBody ReportFilterDTO filter) {
-        log.info("📄 Generando resumen PDF con filtros: {}", filter);
+    public ResponseEntity<byte[]> generatePdf(
+            @RequestBody ReportFilterDTO filter,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
 
-        List<ReportSummaryDTO> reports = reportSummaryService.getFilteredReports(filter);
-        byte[] pdf = reportSummaryService.generatePdf(reports);
+        log.info("📄 Generando resumen PDF con filtros: {}, página: {}, tamaño: {}", filter, page, size);
+
+        PaginatedReportSummaryResponse paginated = reportSummaryService.getFilteredReports(filter, page, size);
+        byte[] pdf = reportSummaryService.generatePdf(paginated);
 
         String filename = String.format("reporte_%s.pdf", LocalDate.now());
 
@@ -54,9 +56,10 @@ public class ReportSummaryController {
                 ContentDisposition.attachment().filename(filename).build()
         );
 
-        log.info("✅ Informe PDF generado correctamente: {}", filename);
+        log.info("✅ Informe PDF generado correctamente: {} ({} bytes)", filename, pdf.length);
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(pdf);
     }
+
 }

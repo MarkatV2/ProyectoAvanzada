@@ -21,6 +21,7 @@ import java.util.List;
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
+
     List<UserResponse> toListResponse (List<User> users);
 
     // Mapeo a UserResponse (existente)

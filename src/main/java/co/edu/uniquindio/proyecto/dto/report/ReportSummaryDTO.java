@@ -7,6 +7,7 @@ import java.util.List;
  * DTO para obtener un resumen de un reporte con detalles básicos.
  */
 public record ReportSummaryDTO(
+        String reportId,
         String title,
         String description,
         List<String> categoryNames,

@@ -75,7 +75,6 @@ public interface ReportStatusHistoryRepository extends MongoRepository<ReportSta
      * @param reportId El ID del reporte cuyo número de cambios de estado se desea contar.
      * @return El número total de cambios de estado que ha tenido el reporte.
      */
-    @Query("{ 'reportId': ?0 }")
     long countByReportId(ObjectId reportId);
 
 

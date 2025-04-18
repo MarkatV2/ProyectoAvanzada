@@ -1,6 +1,7 @@
 package co.edu.uniquindio.proyecto.exceptionhandler.report;
 
 import co.edu.uniquindio.proyecto.dto.response.ErrorResponse;
+import co.edu.uniquindio.proyecto.exception.report.CreatingReportSummaryPdfException;
 import co.edu.uniquindio.proyecto.exception.report.DuplicateReportException;
 import co.edu.uniquindio.proyecto.exception.report.HistoryNotFoundException;
 import co.edu.uniquindio.proyecto.exception.report.ReportNotFoundException;
@@ -75,5 +76,12 @@ public class ReportExceptionHandler {
             HistoryNotFoundException ex, WebRequest request) {
         log.warn("Historial de estados no encontrado: {}", ex.getMessage());
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(CreatingReportSummaryPdfException.class)
+    public ResponseEntity<ErrorResponse> handleCreatingPdfException(
+            CreatingReportSummaryPdfException ex, WebRequest request) {
+        log.warn("Error creando el informe en pdf: {}", ex.getMessage());
+        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 }

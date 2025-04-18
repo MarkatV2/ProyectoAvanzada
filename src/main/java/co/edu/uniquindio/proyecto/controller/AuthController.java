@@ -98,9 +98,9 @@ public class AuthController {
      * @return Un {@link JwtResponse} con el nuevo token de acceso.
      */
     @PostMapping("/accessTokens")
-    public ResponseEntity<JwtAccesResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<JwtAccessResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
         log.info("Recibida solicitud de refresco de token.");
-        JwtAccesResponse response = authService.refreshAccessToken(request.refreshToken());
+        JwtAccessResponse response = authService.refreshAccessToken(request.refreshToken());
         return ResponseEntity.ok(response);
     }
 

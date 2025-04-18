@@ -1,8 +1,8 @@
 package co.edu.uniquindio.proyecto.util;
 
 import co.edu.uniquindio.proyecto.entity.user.User;
-import co.edu.uniquindio.proyecto.exception.InvalidRefreshTokenException;
-import co.edu.uniquindio.proyecto.exception.RefreshTokenExpiredException;
+import co.edu.uniquindio.proyecto.exception.user.InvalidRefreshTokenException;
+import co.edu.uniquindio.proyecto.exception.user.RefreshTokenExpiredException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
@@ -170,10 +170,10 @@ public class JwtUtils {
             log.debug("Refresh token válido.");
         } catch (ExpiredJwtException ex) {
             log.warn("Refresh token expirado.");
-            throw new RefreshTokenExpiredException("El refresh token ha expirado", ex);
+            throw new RefreshTokenExpiredException("El refresh token ha expirado");
         } catch (JwtException ex) {
             log.warn("Refresh token inválido.");
-            throw new InvalidRefreshTokenException("El refresh token es inválido", ex);
+            throw new InvalidRefreshTokenException("El refresh token es inválido");
         }
     }
 

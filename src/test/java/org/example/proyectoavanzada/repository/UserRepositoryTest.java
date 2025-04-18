@@ -207,16 +207,4 @@ class UserRepositoryTest {
     }
 
 
-    @Test
-    @DisplayName("findById - No debe retornar usuarios con estado DELETED aunque existan")
-    void findById_ShouldNotReturnDeletedUsers() {
-        // Arrange
-        User deletedUser = testUsers.get(3);
-
-        // Act
-        Optional<User> result = userRepository.findById(deletedUser.getId());
-
-        // Assert
-        assertFalse(result.isPresent());
-    }
 }

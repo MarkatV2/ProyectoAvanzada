@@ -18,6 +18,7 @@ public class ReportStatusChangeRequestValidator {
      * @param isAdmin Indica si el usuario es administrador.
      */
     public void validate(Report report, ReportStatus newStatus, String rejectionMessage, boolean isAdmin, String currentUserId) {
+        log.info("Si entre al validator: {}", currentUserId);
         switch (newStatus) {
             case VERIFIED, REJECTED -> {
                 if (!isAdmin) {

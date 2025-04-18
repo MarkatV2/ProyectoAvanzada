@@ -79,7 +79,7 @@ public interface ReportRepository extends MongoRepository<Report, ObjectId> {
         }
     },
     'reportStatus': 'VERIFIED',
-    'categories.name': { $in: ?2 }
+    'categoryList.name': { $in: ?2 }
 }
 """)
     Page<Report> findNearbyReportsByCategoryNames(
@@ -88,5 +88,6 @@ public interface ReportRepository extends MongoRepository<Report, ObjectId> {
             List<String> categoryNames,
             Pageable pageable
     );
+
 }
 

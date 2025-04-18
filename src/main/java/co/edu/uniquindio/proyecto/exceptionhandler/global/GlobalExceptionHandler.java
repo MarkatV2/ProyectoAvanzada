@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -139,10 +141,9 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
         log.warn("Parámetro inválido: {}", ex.getMessage(), ex);
-        return ResponseEntity.badRequest().body("ID inválido. Verifica el formato.");
+        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
-
 
 }

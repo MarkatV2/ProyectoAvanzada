@@ -15,6 +15,7 @@ import co.edu.uniquindio.proyecto.repository.ReportRepository;
 import co.edu.uniquindio.proyecto.service.interfaces.CommentService;
 import co.edu.uniquindio.proyecto.service.interfaces.ImageService;
 import co.edu.uniquindio.proyecto.service.interfaces.ReportService;
+import co.edu.uniquindio.proyecto.service.interfaces.ReportStatusHistoryService;
 import co.edu.uniquindio.proyecto.service.mapper.ReportMapper;
 import co.edu.uniquindio.proyecto.util.SecurityUtils;
 import co.edu.uniquindio.proyecto.validator.ReportStatusChangeRequestValidator;
@@ -154,7 +155,7 @@ public class ReportServiceImpl implements ReportService {
             reportsPage = reportRepository.findNearbyReports(location, radiusMeters, pageable);
         }
 
-        log.debug("Se encontraron {} reportes cerca de la ubicación (página {} de {})",
+        log.info("Se encontraron {} reportes cerca de la ubicación (página {} de {})",
                 reportsPage.getNumberOfElements(), pageNumber, reportsPage.getTotalPages());
 
         return mapToPaginatedResponse(reportsPage, pageNumber);
@@ -243,6 +244,7 @@ public class ReportServiceImpl implements ReportService {
      * @throws IllegalArgumentException si la transición es inválida o no autorizada.
      */
     @Override
+    @Transactional
     public void updateReportStatus(String reportId, ReportStatusUpdate dto) {
         log.info("Iniciando actualización de estado del reporte con ID: {}", reportId);
 
@@ -281,7 +283,7 @@ public class ReportServiceImpl implements ReportService {
         Report report = findReportById(parseObjectId(reportId));
 
         String currentUserId = securityUtils.getCurrentUserId();
-        ObjectId userObjectId = new ObjectId(currentUserId);
+        ObjectId userObjectId = parseObjectId(currentUserId);
 
         // Alternar voto
         updateVoteStatus(report, userObjectId);
@@ -523,5 +525,8 @@ public class ReportServiceImpl implements ReportService {
         report.setImportantVotes(report.getImportantVotes() + 1);
         log.info("Se ha sumado un voto del usuario {} para el reporte {}", userObjectId, report.getId());
     }
+
+
+
 
 }

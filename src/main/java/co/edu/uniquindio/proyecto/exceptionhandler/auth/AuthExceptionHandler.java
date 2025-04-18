@@ -1,8 +1,8 @@
 package co.edu.uniquindio.proyecto.exceptionhandler.auth;
 
 import co.edu.uniquindio.proyecto.dto.response.ErrorResponse;
-import co.edu.uniquindio.proyecto.exception.InvalidRefreshTokenException;
-import co.edu.uniquindio.proyecto.exception.RefreshTokenExpiredException;
+import co.edu.uniquindio.proyecto.exception.user.InvalidRefreshTokenException;
+import co.edu.uniquindio.proyecto.exception.user.RefreshTokenExpiredException;
 import co.edu.uniquindio.proyecto.exception.auth.AccountDisabledException;
 import co.edu.uniquindio.proyecto.exception.auth.CodeExpiredException;
 import co.edu.uniquindio.proyecto.exception.auth.InvalidCodeException;
@@ -82,13 +82,13 @@ public class AuthExceptionHandler {
     @ExceptionHandler(RefreshTokenExpiredException.class)
     public ResponseEntity<ErrorResponse> handleExpiredRefreshToken( RefreshTokenExpiredException ex, WebRequest request) {
         log.warn("Refresh token expirado: {}", ex.getMessage());
-        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.FORBIDDEN, request);
+        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(
             InvalidRefreshTokenException ex, WebRequest request) {
         log.warn("Refresh token inválido: {}", ex.getMessage());
-        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.FORBIDDEN, request);
+        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 }
