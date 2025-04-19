@@ -5,8 +5,11 @@ import co.edu.uniquindio.proyecto.dto.report.ReportStatusHistoryResponse;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatusHistory;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
 import co.edu.uniquindio.proyecto.exception.report.HistoryNotFoundException;
+import co.edu.uniquindio.proyecto.exception.report.ReportNotFoundException;
+import co.edu.uniquindio.proyecto.exception.user.UserNotFoundException;
 import co.edu.uniquindio.proyecto.repository.ReportRepository;
 import co.edu.uniquindio.proyecto.repository.ReportStatusHistoryRepository;
+import co.edu.uniquindio.proyecto.repository.UserRepository;
 import co.edu.uniquindio.proyecto.service.interfaces.ReportStatusHistoryService;
 import co.edu.uniquindio.proyecto.service.mapper.ReportStatusHistoryMapper;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,8 @@ public class ReportStatusHistoryServiceImpl implements ReportStatusHistoryServic
 
     private final ReportStatusHistoryRepository historyRepository;
     private final ReportStatusHistoryMapper historyMapper;
+    private final UserRepository userRepository;
+    private final ReportRepository reportRepository;
 
     /**
      * Crea internamente una entrada de historial.
@@ -76,6 +81,8 @@ public class ReportStatusHistoryServiceImpl implements ReportStatusHistoryServic
      */
     @Override
     public PaginatedHistoryResponse getHistoryByReportId(String reportId, int page, int size) {
+        log.info("Consultando si existe el reporte {} ....", reportId);
+        reportRepository.findById(new ObjectId(reportId)).orElseThrow(() -> new ReportNotFoundException(reportId));
         log.info("Solicitando historial completo para el reporte {}. Página: {}, Tamaño: {}", reportId, page, size);
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<ReportStatusHistory> result =
@@ -93,6 +100,8 @@ public class ReportStatusHistoryServiceImpl implements ReportStatusHistoryServic
      */
     @Override
     public PaginatedHistoryResponse getHistoryByUserId(String userId, int page, int size) {
+        log.info("Consultando si existe el usuario con id: {} ...", userId);
+        userRepository.findById(new ObjectId(userId)).orElseThrow(() -> new UserNotFoundException(userId));
         log.info("Obteniendo historial de cambios realizados por el usuario {}. Página: {}, Tamaño: {}", userId, page, size);
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<ReportStatusHistory> result =

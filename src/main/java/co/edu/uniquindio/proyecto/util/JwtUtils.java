@@ -3,10 +3,7 @@ package co.edu.uniquindio.proyecto.util;
 import co.edu.uniquindio.proyecto.entity.user.User;
 import co.edu.uniquindio.proyecto.exception.user.InvalidRefreshTokenException;
 import co.edu.uniquindio.proyecto.exception.user.RefreshTokenExpiredException;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
@@ -167,11 +164,11 @@ public class JwtUtils {
                     .build()
                     .parseSignedClaims(token);
 
-            log.debug("Refresh token válido.");
+            log.info("Refresh token válido.");
         } catch (ExpiredJwtException ex) {
             log.warn("Refresh token expirado.");
             throw new RefreshTokenExpiredException("El refresh token ha expirado");
-        } catch (JwtException ex) {
+        } catch (JwtException | MalformedJwtException ex) {
             log.warn("Refresh token inválido.");
             throw new InvalidRefreshTokenException("El refresh token es inválido");
         }

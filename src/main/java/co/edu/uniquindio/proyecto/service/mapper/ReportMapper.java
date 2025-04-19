@@ -2,6 +2,7 @@ package co.edu.uniquindio.proyecto.service.mapper;
 
 import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
 import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
+import co.edu.uniquindio.proyecto.dto.report.ReportUpdateDto;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import org.bson.types.ObjectId;
 import org.mapstruct.*;
@@ -40,7 +41,7 @@ public interface ReportMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "userEmail", ignore = true)
-    void updateEntity(@MappingTarget Report report, ReportRequest request);
+    void updateEntity(@MappingTarget Report report, ReportUpdateDto request);
 
 
     @Named("objectIdToString")

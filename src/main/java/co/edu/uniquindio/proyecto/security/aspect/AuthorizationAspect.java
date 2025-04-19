@@ -5,6 +5,7 @@ import co.edu.uniquindio.proyecto.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.*;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
@@ -44,7 +45,7 @@ public class AuthorizationAspect {
 
         log.info("Autorización: verificando acceso a {} con ID {}", entityClass.getSimpleName(), id);
 
-        Object entity = mongoTemplate.findById(id, entityClass);
+        Object entity = mongoTemplate.findById(new ObjectId((id)), entityClass);
 
         String currentUserId = securityUtils.getCurrentUserId();
         boolean isAdmin = securityUtils.hasRole("ROLE_ADMIN");
@@ -52,16 +53,19 @@ public class AuthorizationAspect {
         try {
             Field userIdField = entityClass.getDeclaredField("userId");
             userIdField.setAccessible(true);
-            String ownerId = (String) userIdField.get(entity);
+            String ownerId = userIdField.get(entity).toString();
 
-            log.debug("Usuario actual: {}, Propietario del recurso: {}, ¿Es admin?: {}", currentUserId, ownerId, isAdmin);
+            log.info("Usuario actual: {}, Propietario del recurso: {}, ¿Es admin?: {}", currentUserId, ownerId, isAdmin);
 
             if (!currentUserId.equals(ownerId) && !isAdmin) {
                 log.warn("Acceso denegado: el usuario {} no tiene permisos sobre este recurso", currentUserId);
                 throw new AccessDeniedException("No tienes permisos para acceder a este recurso.");
             }
 
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        }catch(NullPointerException ex){
+            log.info("Entidad no encontrada, validando con el controlador....");
+        }
+        catch (NoSuchFieldException | IllegalAccessException e) {
             log.error("Error accediendo al campo 'userId' en {}", entityClass.getSimpleName(), e);
             throw new RuntimeException("Error al verificar permisos.");
         }

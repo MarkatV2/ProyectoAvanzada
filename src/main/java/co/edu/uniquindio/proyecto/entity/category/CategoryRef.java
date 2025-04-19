@@ -13,4 +13,6 @@ public class CategoryRef {
     public CategoryRef(String name) {
         this.name = name;
     }
+
+    public CategoryRef() {};
 }

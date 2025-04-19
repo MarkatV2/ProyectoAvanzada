@@ -23,8 +23,8 @@ public interface CommentRepository extends MongoRepository<Comment, ObjectId> {
      * @param pageable Información de paginación.
      * @return Página de comentarios publicados asociados al reporte.
      */
-    @Query("{ '_id': ?0, 'commentStatus': 'PUBLISHED' }")
-    Page<Comment> findByReportId(ObjectId reportId, Pageable pageable);
+    @Query("{ 'reportId': ?0, 'commentStatus': 'PUBLISHED' }")
+    Page<Comment> findByAllByReportId(ObjectId reportId, Pageable pageable);
 
     /**
      * Obtiene un comentario específico por su ID, solo si su estado es "PUBLISHED".

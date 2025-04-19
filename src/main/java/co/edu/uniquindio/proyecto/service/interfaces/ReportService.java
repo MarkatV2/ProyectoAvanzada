@@ -2,10 +2,8 @@ package co.edu.uniquindio.proyecto.service.interfaces;
 
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
-import co.edu.uniquindio.proyecto.dto.report.PaginatedReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
-import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportStatusUpdate;
+import co.edu.uniquindio.proyecto.dto.report.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 /**
@@ -57,7 +55,8 @@ public interface ReportService {
      * @param request  nuevos datos del reporte.
      * @return reporte actualizado.
      */
-    ReportResponse updateReport(String reportId, ReportRequest request);
+
+    ReportResponse updateReport(String reportId, ReportUpdateDto request);
 
     /**
      * Actualiza el estado de un reporte.

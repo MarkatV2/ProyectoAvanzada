@@ -6,6 +6,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -41,4 +42,8 @@ public interface VerificationCodeRepository extends MongoRepository<Verification
      * @param userId ID del usuario.
      */
     void deleteAllByUserId(ObjectId userId);
+
+    long countByUserId(ObjectId userId);
+
+    List<VerificationCode> findAllByUserId(ObjectId userId);
 }

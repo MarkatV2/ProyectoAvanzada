@@ -55,7 +55,6 @@ public class ReportSummaryServiceImpl implements ReportSummaryService {
      */
     @Override
     public PaginatedReportSummaryResponse getFilteredReports(ReportFilterDTO filter, int page, int size) {
-        validateDates(filter);
 
         Criteria criteria = buildCriteria(filter);
         Query query = new Query(criteria);
@@ -105,30 +104,26 @@ public class ReportSummaryServiceImpl implements ReportSummaryService {
 
 
     /**
-     * Valida que las fechas del filtro no sean nulas.
-     *
-     * @param filter Filtro con fechas a validar.
-     * @throws IllegalArgumentException si las fechas son inválidas.
-     */
-    private void validateDates(ReportFilterDTO filter) {
-        if (filter.startDate() == null || filter.endDate() == null) {
-            log.error("Fechas inválidas: startDate={}, endDate={}", filter.startDate(), filter.endDate());
-            throw new IllegalArgumentException("Las fechas de inicio y fin no pueden ser nulas.");
-        }
-        log.info("Filtrando por fechas: desde {} hasta {}", filter.startDate(), filter.endDate());
-    }
-
-
-    /**
      * Construye el objeto Criteria para la consulta basada en el filtro.
      *
      * @param filter Filtro con criterios de búsqueda.
      * @return Criteria con condiciones aplicadas.
      */
     private Criteria buildCriteria(ReportFilterDTO filter) {
-        Criteria criteria = Criteria.where("createdAt")
-                .gte(filter.startDate())
-                .lte(filter.endDate());
+        Criteria criteria = new Criteria();
+
+        // Filtrar por fecha solo si hay alguna fecha presente
+        if (filter.startDate() != null && filter.endDate() != null) {
+            criteria = Criteria.where("createdAt")
+                    .gte(filter.startDate())
+                    .lte(filter.endDate());
+        } else if (filter.startDate() != null) {
+            criteria = Criteria.where("createdAt")
+                    .gte(filter.startDate());
+        } else if (filter.endDate() != null) {
+            criteria = Criteria.where("createdAt")
+                    .lte(filter.endDate());
+        }
 
         applyCategoryFilter(criteria, filter);
         applyLocationFilter(criteria, filter);
@@ -146,8 +141,8 @@ public class ReportSummaryServiceImpl implements ReportSummaryService {
     private void applyCategoryFilter(Criteria criteria, ReportFilterDTO filter) {
         if (filter.categoryIds() != null && !filter.categoryIds().isEmpty()) {
             log.info("Filtrando por categorías: {}", filter.categoryIds());
-            criteria.and("categoryList._id").in(
-                    filter.categoryIds().stream().map(ObjectId::new).toList()
+            criteria.and("categoryList.id").in(
+                    filter.categoryIds()
             );
         }
     }

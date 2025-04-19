@@ -108,21 +108,15 @@ public class CommentServiceImpl implements CommentService {
      * @throws IdInvalidException si el reportId no es un ObjectId válido.
      * @throws CommentNotFoundException si no se encuentran comentarios para el reporte.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public CommentPaginatedResponse getCommentsByReportId(String reportId, int page, int size) {
         log.info("Obteniendo comentarios para el reporte con ID: {} - Página: {}, Tamaño: {}", reportId, page, size);
 
         ObjectId reportObjectId = parseObjectId(reportId, "ID de reporte inválido: " + reportId);
 
-        PageRequest pageable = PageRequest.of(page, size);
-        Page<Comment> commentPage = commentRepository.findByReportId(reportObjectId, pageable);
-
-        if (commentPage.isEmpty()) {
-            log.warn("No se encontraron comentarios para el reporte con ID: {}", reportId);
-            throw new CommentNotFoundException("No se encontraron comentarios para el reporte con ID: " + reportId);
-        }
-
+        PageRequest pageable = PageRequest.of(Math.max(page - 1, 0), size);
+        Page<Comment> commentPage = commentRepository.findByAllByReportId(reportObjectId, pageable);
         List<CommentResponse> responses = commentMapper.toResponseList(commentPage.getContent());
 
         log.info("Se encontraron {} comentarios para el reporte {} en la página {}",

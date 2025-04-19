@@ -2,10 +2,7 @@ package co.edu.uniquindio.proyecto.controller;
 
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
-import co.edu.uniquindio.proyecto.dto.report.PaginatedReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
-import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportStatusUpdate;
+import co.edu.uniquindio.proyecto.dto.report.*;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import co.edu.uniquindio.proyecto.annotation.CheckOwnerOrAdmin;
 import co.edu.uniquindio.proyecto.service.interfaces.ReportService;
@@ -105,7 +102,7 @@ public class ReportController {
     @CheckOwnerOrAdmin(entityClass = Report.class)
     public ResponseEntity<ReportResponse> updateReport(
             @PathVariable String reportId,
-            @Valid @RequestBody ReportRequest request) {
+            @Valid @RequestBody ReportUpdateDto request) {
 
         log.info("✏️ Actualizando reporte con ID: {}", reportId);
         ReportResponse response = reportService.updateReport(reportId, request);

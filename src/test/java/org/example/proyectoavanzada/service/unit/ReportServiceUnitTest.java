@@ -9,10 +9,7 @@ import java.util.*;
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.comment.CommentResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
-import co.edu.uniquindio.proyecto.dto.report.PaginatedReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
-import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportStatusUpdate;
+import co.edu.uniquindio.proyecto.dto.report.*;
 import co.edu.uniquindio.proyecto.entity.category.CategoryRef;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
@@ -571,12 +568,10 @@ class ReportServiceUnitTest {
         // Arrange
         String reportId = "507f1f77bcf86cd799439011";
         String userId = "507f1f77bcf86cd799439012";
-        ReportRequest request = new ReportRequest(
+        ReportUpdateDto request = new ReportUpdateDto(
                 "Nuevo título",
                 "Nueva descripción",
-                List.of(new CategoryRef("Nueva categoría")),
-                10.5,
-                20.5
+                List.of(new CategoryRef("Nueva categoría"))
         );
 
         Report existingReport = new Report();
@@ -592,8 +587,8 @@ class ReportServiceUnitTest {
                 request.title(),
                 request.description(),
                 request.categoryList(),
-                request.latitude(),
-                request.longitude(),
+                existingReport.getLocation().getX(),
+                existingReport.getLocation().getY(),
                 "PENDING",
                 LocalDateTime.now(),
                 0,
@@ -619,12 +614,10 @@ class ReportServiceUnitTest {
     void updateReport_ShouldThrowReportNotFoundException_WhenReportNotFound() {
         // Arrange
         String reportId = "507f1f77bcf86cd799439011";
-        ReportRequest request = new ReportRequest(
+        ReportUpdateDto request = new ReportUpdateDto(
                 "Título",
                 "Descripción",
-                List.of(new CategoryRef("Categoría")),
-                10.0,
-                20.0
+                List.of(new CategoryRef("Categoría"))
         );
 
         when(reportRepository.findById(new ObjectId(reportId))).thenReturn(Optional.empty());
@@ -642,12 +635,10 @@ class ReportServiceUnitTest {
     void updateReport_ShouldThrowIdInvalidException_WhenInvalidId() {
         // Arrange
         String invalidReportId = "id_invalido";
-        ReportRequest request = new ReportRequest(
+        ReportUpdateDto request = new ReportUpdateDto(
                 "Título",
                 "Descripción",
-                List.of(new CategoryRef("Categoría")),
-                10.0,
-                20.0
+                List.of(new CategoryRef("Categoría"))
         );
 
         // Act & Assert
@@ -665,12 +656,10 @@ class ReportServiceUnitTest {
         // Arrange
         String reportId = "507f1f77bcf86cd799439011";
         String userId = "507f1f77bcf86cd799439012";
-        ReportRequest request = new ReportRequest(
+        ReportUpdateDto request = new ReportUpdateDto(
                 "Título",
                 "Descripción",
-                List.of(new CategoryRef("Categoría")),
-                10.0,
-                20.0
+                List.of(new CategoryRef("Categoría"))
         );
 
         Report existingReport = new Report();

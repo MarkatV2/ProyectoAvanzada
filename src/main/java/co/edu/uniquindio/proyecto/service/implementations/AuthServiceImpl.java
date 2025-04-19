@@ -66,7 +66,6 @@ public class AuthServiceImpl implements AuthService {
 
             // Extraer usuario y verificar estado
             User user = (User) authentication.getPrincipal();
-            verifyUserStatus(user);
 
             // Generar y retornar el token
             JwtResponse tokenResponse = generateJwtToken(user);
@@ -76,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
         } catch (BadCredentialsException ex) {
             log.warn("Credenciales incorrectas para el usuario '{}'", request.userName(), ex);
             throw new InvalidPasswordException("Contraseña incorrecta");
-        } catch (AccountDisabledException ex) {
+        } catch (DisabledException ex) {
             log.warn("La cuenta del usuario '{}' no está activada", request.userName(), ex);
             throw new AccountDisabledException("La cuenta no está activada");
         } catch (UsernameNotFoundException ex) {
@@ -91,6 +90,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JwtAccessResponse refreshAccessToken(String refreshToken) {
+        log.info("Validando refreshToken....");
         // 1. Validar refresh token
         jwtUtils.validateRefreshToken(refreshToken);
 
@@ -99,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 3. Buscar usuario
         User user = userRepository.findById(new ObjectId(userId))
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con ID: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con ID: " + userId));
 
         // 4. Generar nuevo access token
         String newAccessToken = jwtUtils.generateToken(user);
@@ -150,19 +150,6 @@ public class AuthServiceImpl implements AuthService {
                         userDetails.getAuthorities()
                 )
         );
-    }
-
-    /**
-     * Verifica si la cuenta del usuario está habilitada.
-     *
-     * @param user Usuario autenticado.
-     * @throws AccountDisabledException si la cuenta está deshabilitada.
-     */
-    private void verifyUserStatus(User user) {
-        if (!user.isEnabled()) {
-            log.warn("Usuario '{}' está registrado pero su cuenta está desactivada", user.getUsername());
-            throw new AccountDisabledException("La cuenta no está activada");
-        }
     }
 
     /**

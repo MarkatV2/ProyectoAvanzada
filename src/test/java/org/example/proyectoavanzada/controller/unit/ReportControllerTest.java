@@ -5,10 +5,7 @@ import co.edu.uniquindio.proyecto.controller.UserController;
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.comment.CommentResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
-import co.edu.uniquindio.proyecto.dto.report.PaginatedReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
-import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportStatusUpdate;
+import co.edu.uniquindio.proyecto.dto.report.*;
 import co.edu.uniquindio.proyecto.entity.category.CategoryRef;
 import co.edu.uniquindio.proyecto.exception.global.IdInvalidException;
 import co.edu.uniquindio.proyecto.exception.global.ServiceUnavailableException;
@@ -241,7 +238,7 @@ public class ReportControllerTest {
         // Arrange
         ReportResponse rr = mockReports.get(0);
         ReportRequest req = new ReportRequest("Nuevo título", "Nueva descripción", List.of(new CategoryRef("c1")), 4.5, -75.5);
-        when(reportService.updateReport(eq(rr.id()), any(ReportRequest.class)))
+        when(reportService.updateReport(eq(rr.id()), any(ReportUpdateDto.class)))
                 .thenReturn(rr);
 
         // Act & Assert
@@ -261,7 +258,7 @@ public class ReportControllerTest {
         String badId = "no-id";
         ReportRequest req = new ReportRequest("Nuevo título", "Nueva descripción",
                 List.of(new CategoryRef("c1")), 4.5, -75.5);
-        when(reportService.updateReport(eq(badId), any(ReportRequest.class)))
+        when(reportService.updateReport(eq(badId), any(ReportUpdateDto.class)))
                 .thenThrow(new ReportNotFoundException(badId));
 
         // Act & Assert
@@ -276,7 +273,7 @@ public class ReportControllerTest {
     void testUpdateReport_InvalidId() throws Exception {
         // Arrange
         String invalidId = "xxx";
-        when(reportService.updateReport(eq(invalidId), any(ReportRequest.class)))
+        when(reportService.updateReport(eq(invalidId), any(ReportUpdateDto.class)))
                 .thenThrow(new IdInvalidException(invalidId));
 
         // Act & Assert

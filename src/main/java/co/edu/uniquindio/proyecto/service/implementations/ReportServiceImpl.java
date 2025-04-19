@@ -2,10 +2,7 @@ package co.edu.uniquindio.proyecto.service.implementations;
 
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
-import co.edu.uniquindio.proyecto.dto.report.PaginatedReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
-import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
-import co.edu.uniquindio.proyecto.dto.report.ReportStatusUpdate;
+import co.edu.uniquindio.proyecto.dto.report.*;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
 import co.edu.uniquindio.proyecto.exception.report.DuplicateReportException;
@@ -215,7 +212,7 @@ public class ReportServiceImpl implements ReportService {
      */
     @Transactional
     @Override
-    public ReportResponse updateReport(String reportId, ReportRequest request) {
+    public ReportResponse updateReport(String reportId, ReportUpdateDto request) {
 
         log.info("Actualizando el reporte con ID: {}", reportId);
 
