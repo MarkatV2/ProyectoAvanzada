@@ -1,7 +1,10 @@
 package co.edu.uniquindio.proyecto.entity.notification;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -9,11 +12,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
 @Document(collection = "notifications")
-@Data @Builder
+@Data
+@Builder
+@NoArgsConstructor  // Constructor sin parámetros (por si lo necesitas)
+@AllArgsConstructor // Constructor con todos los parámetros
 public class Notification {
 
     @Id
-    private String id;
+    private ObjectId id;
 
     private String userId; // ID del receptor de la notificación
 
@@ -24,7 +30,10 @@ public class Notification {
 
     private GeoJsonPoint location; // Para filtrar por cercanía
 
-    private boolean read; //false
+    private boolean read; // Indica si la notificación ha sido leída
 
     private LocalDateTime createdAt;
+
+    // Si necesitas un constructor público, puedes usar @AllArgsConstructor
+    // y Lombok generará un constructor adecuado.
 }
