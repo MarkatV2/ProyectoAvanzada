@@ -23,4 +23,8 @@ public class Image implements Ownable {
         return this.userId.toString();
     };
 
+    public void setUrl(String url) {
+
+    }
+
 }

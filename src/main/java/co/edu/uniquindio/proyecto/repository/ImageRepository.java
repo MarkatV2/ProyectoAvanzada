@@ -17,6 +17,21 @@ public interface ImageRepository extends MongoRepository<Image, ObjectId> {
      *
      * @param reportId Identificador del reporte al que pertenecen las imágenes.
      * @return Lista de imágenes asociadas al reporte.
+     * @throws IllegalArgumentException si el reportId es null.
      */
-    List<Image> findAllByReportId(ObjectId reportId);
+    default List<Image> findAllByReportId(ObjectId reportId) {
+        if (reportId == null) {
+            throw new IllegalArgumentException("El reportId no puede ser nulo");
+        }
+        return findByReportId(reportId); // Llama al método real que consulta la base de datos
+    }
+
+    /**
+     * Consulta por reportId.
+     *
+     * @param reportId Identificador del reporte.
+     * @return Lista de imágenes asociadas al reporte.
+     */
+    List<Image> findByReportId(ObjectId reportId);
 }
+
