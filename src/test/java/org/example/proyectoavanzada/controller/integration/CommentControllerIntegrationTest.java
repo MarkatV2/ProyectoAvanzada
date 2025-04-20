@@ -47,7 +47,7 @@ import co.edu.uniquindio.proyecto.service.interfaces.ImageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Integration tests for the ImageController.
+ * Integration tests for the CommentController.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
