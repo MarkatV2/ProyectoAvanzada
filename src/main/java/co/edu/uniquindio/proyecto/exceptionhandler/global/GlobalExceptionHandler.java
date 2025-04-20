@@ -4,6 +4,7 @@ import co.edu.uniquindio.proyecto.dto.response.ErrorResponse;
 import co.edu.uniquindio.proyecto.dto.response.ValidationErrorResponse;
 import co.edu.uniquindio.proyecto.exception.global.IdInvalidException;
 import co.edu.uniquindio.proyecto.exception.global.ServiceUnavailableException;
+import co.edu.uniquindio.proyecto.exception.image.ImageNotFoundException;
 import co.edu.uniquindio.proyecto.exceptionhandler.ErrorResponseBuilder;
 import com.mongodb.MongoSocketOpenException;
 import lombok.RequiredArgsConstructor;
@@ -144,6 +145,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
         log.warn("Parámetro inválido: {}", ex.getMessage(), ex);
         return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(ImageNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(ImageNotFoundException ex, WebRequest request) {
+        log.warn("Parámetro inválido: {}", ex.getMessage(), ex);
+        return errorResponseBuilder.buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
     }
 
 }
