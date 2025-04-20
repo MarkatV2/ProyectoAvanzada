@@ -87,7 +87,9 @@ class AuthControllerUnitTest {
         }
     }
 
-    // verifyAccount
+
+    // ------------------------------------------- VERIFY_ACCOUNT -------------------------------------------- //
+
 
     @Test
     @DisplayName("PATCH /api/v1/auth/activations retorna 200 cuando el código es válido")
@@ -121,7 +123,7 @@ class AuthControllerUnitTest {
     }
 
 
-    // sendCodeAgain
+    // ------------------------------------------- SEND_CODE_AGAIN -------------------------------------------- //
 
     @Test
     @DisplayName("POST /api/v1/auth/activations/{userId} retorna 204 cuando el usuario existe")
@@ -154,6 +156,11 @@ class AuthControllerUnitTest {
         mockMvc.perform(post("/api/v1/auth/activations/{userId}", invalid))
                 .andExpect(status().isBadRequest());
     }
+
+
+    // ------------------------------------------- LOGIN -------------------------------------------- //
+
+
     @Test
     @DisplayName("POST /api/v1/auth/sessions retorna 200 con el JWT y refreshToken cuando las credenciales son válidas")
     void testLogin_Success() throws Exception {
@@ -231,6 +238,9 @@ class AuthControllerUnitTest {
     }
 
 
+    // ------------------------------------------- PASSWORD_RESET -------------------------------------------- //
+
+
     @Test
     @DisplayName("POST /api/v1/auth/passwordCodes retorna 204 cuando se solicita el código correctamente")
     void testRequestPasswordReset_Success() throws Exception {
@@ -253,6 +263,10 @@ class AuthControllerUnitTest {
                         .param("email", email))
                 .andExpect(status().isNotFound());
     }
+
+
+    // ------------------------------------------- CONFIRM_PASSWORD_RESET -------------------------------------------- //
+
 
     @Test
     @DisplayName("PATCH /api/v1/auth/users/password retorna 200 cuando el código y contraseña son válidos")
@@ -298,7 +312,7 @@ class AuthControllerUnitTest {
     @Test
     @DisplayName("PATCH /api/v1/auth/users/password retorna 404 cuando no se encuentra el usuario")
     void testConfirmResetPassword_UserNotFound() throws Exception {
-        PasswordResetRequest request = new PasswordResetRequest("VALID", "1234");
+        PasswordResetRequest request = new PasswordResetRequest("VALID", "1Mn_86g");
         doThrow(new UserNotFoundException("ID"))
                 .when(verificationService).resetPasswordWithCode(request.code(), request.newPassword());
 
@@ -309,7 +323,8 @@ class AuthControllerUnitTest {
     }
 
 
-    // --- refresh token ---
+    // ------------------------------------------- REFRESH_ACCESS_TOKEN -------------------------------------------- //
+
 
     @Test
     @DisplayName("POST /api/v1/auth/accessTokens retorna 200 con nuevo token cuando el refresh token es válido")

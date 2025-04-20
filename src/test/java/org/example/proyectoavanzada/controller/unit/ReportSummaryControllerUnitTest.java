@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = ReportSummaryController.class)
 @Import({ReportExceptionHandler.class, GlobalExceptionHandler.class, ErrorResponseBuilder.class})
 @ContextConfiguration(classes = {ReportSummaryController.class, TestSecurityConfig.class})
-class ReportSummaryControllerTest {
+class ReportSummaryControllerUnitTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -77,6 +77,10 @@ class ReportSummaryControllerTest {
                 )
         ).toList();
     }
+
+
+    // ------------------------------------------- CREATE_PDF_REPORT_SUMMARIES -------------------------------------------- //
+
 
     @Test
     @DisplayName("POST /api/v1/admin/reportSummaries/pdf retorna 200 y PDF válido")
@@ -151,5 +155,6 @@ class ReportSummaryControllerTest {
 
         verifyNoInteractions(reportSummaryService);
     }
+
 }
 

@@ -142,7 +142,7 @@ public class AuthServiceImpl implements AuthService {
      * @throws BadCredentialsException si las credenciales son incorrectas.
      */
     private Authentication performAuthentication(LoginRequest request, UserDetails userDetails) {
-        log.debug("Autenticando usuario '{}'", request.userName());
+        log.info("Autenticando usuario '{}'", request.userName());
         return authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.userName(),

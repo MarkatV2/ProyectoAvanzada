@@ -60,7 +60,9 @@ class ReportStatusHistoryControllerUnitTest {
                 .toList();
     }
 
+
     // -------------------------------- getHistoryById --------------------------------
+
 
     @Test
     @DisplayName("GET /api/v1/report-status-histories/{id} retorna 200 y el historial cuando existe")
@@ -106,7 +108,9 @@ class ReportStatusHistoryControllerUnitTest {
         verify(historyService).getHistoryById(invalid);
     }
 
+
     // ----------------------------- getByReportId -----------------------------
+
 
     @Test
     @DisplayName("GET /api/v1/report-status-histories/by-report retorna 200 con paginación válida")
@@ -180,6 +184,7 @@ class ReportStatusHistoryControllerUnitTest {
 
     // ------------------------ getByDateRange ------------------------
 
+
     @Test
     @DisplayName("GET /by-report/date-range retorna 200 con resultados paginados")
     void getByDateRange_Success() throws Exception {
@@ -251,7 +256,9 @@ class ReportStatusHistoryControllerUnitTest {
         verifyNoInteractions(historyService);
     }
 
+
     // ---------------------- getByPreviousStatus ----------------------
+
 
     @Test
     @DisplayName("GET /by-report/previous-status retorna 200 con resultados filtrados")
@@ -305,7 +312,9 @@ class ReportStatusHistoryControllerUnitTest {
         verifyNoInteractions(historyService);
     }
 
+
     // -------------------------------- getByNewStatusAndDateRange --------------------------------
+
 
     @Test
     @DisplayName("GET /by-report/new-status-and-dates retorna 200 con resultados filtrados")
@@ -381,7 +390,9 @@ class ReportStatusHistoryControllerUnitTest {
         verifyNoInteractions(historyService);
     }
 
+
     // -------------------------------- getByUserId --------------------------------
+
 
     @Test
     @DisplayName("GET /by-user retorna 200 con resultados paginados")
@@ -435,11 +446,14 @@ class ReportStatusHistoryControllerUnitTest {
     }
 
 
+    // ------------------------------------------- COUNT_BY_REPORT -------------------------------------------- //
+
+
     @Test
     @DisplayName("GET /api/v1/report-status-histories/count retorna 200 y la cuenta correcta")
     void countByReportId_Success() throws Exception {
         String reportId = allHistories.get(0).reportId();
-        when(historyService.countHistoryByReportId(reportId)).thenReturn(1l);
+        when(historyService.countHistoryByReportId(reportId)).thenReturn(1L);
 
         mockMvc.perform(get("/api/v1/report-status-histories/count")
                         .param("reportId", reportId))

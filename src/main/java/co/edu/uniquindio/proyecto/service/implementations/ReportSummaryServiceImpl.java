@@ -159,7 +159,7 @@ public class ReportSummaryServiceImpl implements ReportSummaryService {
             log.info("Filtrando por ubicación: centro={} radio={} km", filter.center(), filter.radiusKm());
             criteria.and("location")
                     .nearSphere(filter.center())
-                    .maxDistance(kmToRadians(filter.radiusKm()));
+                    .maxDistance(filter.radiusKm() * 1000);
         }
     }
 

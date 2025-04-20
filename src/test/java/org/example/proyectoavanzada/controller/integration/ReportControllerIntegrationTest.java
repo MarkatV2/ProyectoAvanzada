@@ -2,12 +2,16 @@ package org.example.proyectoavanzada.controller.integration;
 
 import co.edu.uniquindio.proyecto.ProyectoApplication;
 import co.edu.uniquindio.proyecto.configuration.SecurityConfig;
-import co.edu.uniquindio.proyecto.controller.AuthController;
+import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
+import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
 import co.edu.uniquindio.proyecto.dto.report.PaginatedReportResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportRequest;
 import co.edu.uniquindio.proyecto.dto.report.ReportResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportUpdateDto;
 import co.edu.uniquindio.proyecto.entity.category.CategoryRef;
+import co.edu.uniquindio.proyecto.entity.comment.Comment;
+import co.edu.uniquindio.proyecto.entity.comment.CommentStatus;
+import co.edu.uniquindio.proyecto.entity.image.Image;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
 import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
@@ -18,7 +22,9 @@ import co.edu.uniquindio.proyecto.service.EmailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.types.ObjectId;
 import org.example.proyectoavanzada.util.LoginUtils;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -26,8 +32,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -125,6 +131,10 @@ class ReportControllerIntegrationTest {
         mongoTemplate.insert(user2);
     }
 
+
+    // ------------------------------------------- GET_ALL_REPORTS_WITH_FILTERS -------------------------------------------- //
+
+
     @Test
     @DisplayName("Consulta reportes cercanos con token válido devuelve 200 y list paginada")
     void givenValidToken_whenFilterReports_thenReturnsOkAndPaginatedResults() {
@@ -207,6 +217,10 @@ class ReportControllerIntegrationTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
+
+    // ------------------------------------------- GET_REPORT_BY_ID -------------------------------------------- //
+
+
     @Test
     @DisplayName("Obtener reporte por ID válido con token devuelve 200 y reporte correcto")
     void givenValidToken_whenGetReportById_thenReturnsReport() {
@@ -255,6 +269,10 @@ class ReportControllerIntegrationTest {
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
+
+
+    // ------------------------------------------- CREATE_REPORT -------------------------------------------- //
+
 
     @Test
     @DisplayName("Crear reporte válido devuelve 201 Created, Location y body correcto")
@@ -366,6 +384,10 @@ class ReportControllerIntegrationTest {
         // Assert
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
+
+
+    // ------------------------------------------- UPDATE_REPORT -------------------------------------------- //
+
 
     @Test
     @DisplayName("Actualización de reporte por propietario devuelve 200 y body actualizado")
@@ -522,6 +544,582 @@ class ReportControllerIntegrationTest {
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
+
+
+    // ------------------------------------------- DELETE_REPORT -------------------------------------------- //
+
+
+    @Test
+    @DisplayName("El propietario puede eliminar un reporte y luego no se encuentra")
+    void givenOwnerToken_whenDeleteReport_thenReturnsNoContentAndReportIsGone() {
+        // Arrange
+        Report owned = testReports.get(0);
+        String reportId = owned.getId().toHexString();
+        String token = loginUtils.obtenerTokenUsuario();
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<Void> deleteResponse = restTemplate.exchange(
+                "/api/v1/reports/" + reportId,
+                HttpMethod.DELETE,
+                request,
+                Void.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
+
+        // Al volver a solicitarlo, debe 404 Not Found
+        ResponseEntity<String> getResponse = restTemplate.exchange(
+                "/api/v1/reports/" + reportId,
+                HttpMethod.GET,
+                request,
+                String.class
+        );
+        assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Admin puede eliminar un reporte y obtener 204 No Content")
+    void givenAdminToken_whenDeleteReport_thenReturnsNoContent() {
+        // Arrange
+        Report anyReport = testReports.get(1);
+        String reportId = anyReport.getId().toHexString();
+        String token = loginUtils.obtenerTokenAdmin();
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<Void> response = restTemplate.exchange(
+                "/api/v1/reports/" + reportId,
+                HttpMethod.DELETE,
+                request,
+                Void.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("No propietario ni admin al eliminar recibe 403 Forbidden")
+    void givenOtherUserToken_whenDeleteReport_thenReturnsForbidden() {
+        // Arrange
+        Report other = testReports.get(2);
+        String reportId = other.getId().toHexString();
+        // supongamos que existe otro usuario distinto a user@example.com
+        String token = loginUtils.obtenerTokenUsuario("other@example.com","other123");
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/reports/" + reportId,
+                HttpMethod.DELETE,
+                request,
+                String.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Eliminar reporte inexistente devuelve 404 Not Found")
+    void givenAdminToken_whenDeleteNonexistentReport_thenReturnsNotFound() {
+        // Arrange
+        String fakeId = new ObjectId().toHexString();
+        String token = loginUtils.obtenerTokenAdmin();
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/reports/" + fakeId,
+                HttpMethod.DELETE,
+                request,
+                String.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+
+    // ------------------------------------------- UPDATE_REPORT_STATUS -------------------------------------------- //
+
+
+    @Test
+    @DisplayName("Administrador puede cambiar estado a VERIFIED y retorna 200")
+    void givenAdminToken_whenPatchStatusToVerified_thenReturnsOkAndStatusUpdated() {
+        // Arrange
+        Report target = testReports.get(0);
+        String reportId = target.getId().toHexString();
+        String token = loginUtils.obtenerTokenAdmin();
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String body = """
+        {"status":"VERIFIED","rejectionMessage":null}
+        """;
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+        // Act
+        ResponseEntity<Void> patchResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId + "/status",
+                HttpMethod.PATCH,
+                request,
+                Void.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.OK, patchResp.getStatusCode());
+
+        // Corroborar en la consulta GET
+        ResponseEntity<ReportResponse> getResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                ReportResponse.class
+        );
+        assertEquals("VERIFIED", getResp.getBody().reportStatus());
+    }
+
+    @Test
+    @DisplayName("Administrador puede REJECTED con mensaje y retorna 200")
+    void givenAdminToken_whenPatchStatusToRejectedWithMessage_thenReturnsOk() {
+        // Arrange
+        Report target = testReports.get(1);
+        String reportId = target.getId().toHexString();
+        String token = loginUtils.obtenerTokenAdmin();
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String body = """
+        {"status":"REJECTED","rejectionMessage":"Datos inválidos"}
+        """;
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+        // Act
+        ResponseEntity<Void> patchResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId + "/status",
+                HttpMethod.PATCH,
+                request,
+                Void.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.OK, patchResp.getStatusCode());
+
+        ResponseEntity<ReportResponse> getResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                ReportResponse.class
+        );
+        assertEquals("REJECTED", getResp.getBody().reportStatus());
+    }
+
+    @Test
+    @DisplayName("Rechazo sin mensaje obliga a 400 Bad Request")
+    void givenAdminToken_whenPatchStatusToRejectedWithoutMessage_thenReturnsBadRequest() {
+        // Arrange
+        Report target = testReports.get(2);
+        String reportId = target.getId().toHexString();
+        String token = loginUtils.obtenerTokenAdmin();
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String body = """
+        {"status":"REJECTED","rejectionMessage":""}
+        """;
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+        // Act
+        ResponseEntity<String> patchResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId + "/status",
+                HttpMethod.PATCH,
+                request,
+                String.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, patchResp.getStatusCode());
+        assertTrue(patchResp.getBody().contains("Debe proporcionar un mensaje de rechazo"));
+    }
+
+    @Test
+    @DisplayName("Propietario puede marcar RESOLVED y retorna 200")
+    void givenOwnerToken_whenPatchStatusToResolved_thenReturnsOk() {
+        // Arrange
+        Report target = testReports.get(3);
+        // el reporte 3 fue creado con userId == user.getId()
+        String reportId = target.getId().toHexString();
+        String token = loginUtils.obtenerTokenUsuario();
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String body = """
+        {"status":"RESOLVED","rejectionMessage":null}
+        """;
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+        // Act
+        ResponseEntity<Void> patchResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId + "/status",
+                HttpMethod.PATCH,
+                request,
+                Void.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.OK, patchResp.getStatusCode());
+        ResponseEntity<ReportResponse> getResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                ReportResponse.class
+        );
+        assertEquals("RESOLVED", getResp.getBody().reportStatus());
+    }
+
+    @Test
+    @DisplayName("No propietario ni admin al cambiar a RESOLVED recibe 403 Forbidden")
+    void givenOtherUserToken_whenPatchStatusToResolved_thenReturnsForbidden() {
+        // Arrange
+        Report target = testReports.get(4);
+        String reportId = target.getId().toHexString();
+        // Este usuario NO es ni owner ni admin
+        String token = loginUtils.obtenerTokenUsuario("other@example.com","other123");
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String body = """
+        {"status":"RESOLVED","rejectionMessage":null}
+        """;
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+        // Act
+        ResponseEntity<String> patchResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId + "/status",
+                HttpMethod.PATCH,
+                request,
+                String.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, patchResp.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Cambiar estado de reporte inexistente devuelve 404 Not Found")
+    void givenAdminToken_whenPatchStatusNonexistentId_thenReturnsNotFound() {
+        // Arrange
+        String fakeId = new ObjectId().toHexString();
+        String token = loginUtils.obtenerTokenAdmin();
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String body = """
+        {"status":"VERIFIED","rejectionMessage":null}
+        """;
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+        // Act
+        ResponseEntity<String> patchResp = restTemplate.exchange(
+                "/api/v1/reports/" + fakeId + "/status",
+                HttpMethod.PATCH,
+                request,
+                String.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, patchResp.getStatusCode());
+    }
+
+
+    // ------------------------------------------- TOGGLE_VOTE -------------------------------------------- //
+
+
+    @Test
+    @DisplayName("Usuario puede alternar su voto importante en un reporte existente")
+    void givenUserToken_whenToggleVote_thenVoteAddedOrRemoved() {
+        // Arrange
+        Report target = testReports.get(0);
+        String reportId = target.getId().toHexString();
+        String token = loginUtils.obtenerTokenUsuario(); // mismo que creó el reporte 0
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+
+        // Obtener votos antes
+        ResponseEntity<ReportResponse> beforeResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                ReportResponse.class
+        );
+        int votosAntes = beforeResp.getBody().importantVotes();
+
+        // Act
+        ResponseEntity<Void> toggleResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId + "/votes",
+                HttpMethod.PATCH,
+                new HttpEntity<>(headers),
+                Void.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.NO_CONTENT, toggleResp.getStatusCode());
+
+        // Verificar que el voto se haya agregado o quitado
+        ResponseEntity<ReportResponse> afterResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                ReportResponse.class
+        );
+        int votosDespues = afterResp.getBody().importantVotes();
+
+        assertNotEquals(votosAntes, votosDespues);
+    }
+
+    @Test
+    @DisplayName("Alternar voto en reporte inexistente retorna 404 Not Found")
+    void givenUserToken_whenToggleVoteNonExistentReport_thenReturnsNotFound() {
+        // Arrange
+        String fakeId = new ObjectId().toHexString();
+        String token = loginUtils.obtenerTokenUsuario();
+        HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+
+        // Act
+        ResponseEntity<String> toggleResp = restTemplate.exchange(
+                "/api/v1/reports/" + fakeId + "/votes",
+                HttpMethod.PATCH,
+                new HttpEntity<>(headers),
+                String.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, toggleResp.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Acceso sin token retorna 401 Unauthorized")
+    void givenNoToken_whenToggleVote_thenReturnsUnauthorized() {
+        // Arrange
+        Report target = testReports.get(1);
+        String reportId = target.getId().toHexString();
+
+        // Act
+        ResponseEntity<String> toggleResp = restTemplate.exchange(
+                "/api/v1/reports/" + reportId + "/votes",
+                HttpMethod.PATCH,
+                HttpEntity.EMPTY,
+                String.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.UNAUTHORIZED, toggleResp.getStatusCode());
+    }
+
+
+    // ------------------------------------------- GET_ALL_IMAGES_BY_REPORT -------------------------------------------- //
+
+
+    @Test
+    @DisplayName("Obtener todas las imágenes asociadas a un reporte existente")
+    void givenValidReportId_whenGetImages_thenReturnsListOfImages() {
+        Report report = testReports.get(0);
+        ObjectId reportId = report.getId();
+
+        List<Image> imagenes = IntStream.range(0, 5)
+                .mapToObj(i -> {
+                    Image img = new Image();
+                    img.setId(new ObjectId());
+                    img.setImageUrl("https://example.com/imagen" + i + ".jpg");
+                    img.setUploadDate(LocalDateTime.now().minusHours(i));
+                    img.setReportId(reportId);
+                    return img;
+                }).toList();
+
+        mongoTemplate.insertAll(imagenes);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(loginUtils.obtenerTokenUsuario());
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<List<ImageResponse>> response = restTemplate.exchange(
+                "/api/v1/reports/" + reportId.toHexString() + "/images",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(5, response.getBody().size());
+        assertTrue(response.getBody().stream()
+                .allMatch(img -> img.imageUrl().startsWith("https://example.com/")));
+    }
+
+    @Test
+    @DisplayName("Obtener imágenes de reporte sin imágenes devuelve lista vacía")
+    void givenValidReportIdWithoutImages_whenGetImages_thenReturnsEmptyList() {
+        Report report = testReports.get(1);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(loginUtils.obtenerTokenUsuario());
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<List<ImageResponse>> response = restTemplate.exchange(
+                "/api/v1/reports/" + report.getId().toHexString() + "/images",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Obtener imágenes con ID inválido devuelve 400 Bad Request")
+    void givenInvalidReportId_whenGetImages_thenReturnsBadRequest() {
+        String invalidId = "abc123";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(loginUtils.obtenerTokenUsuario());
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/reports/" + invalidId + "/images",
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Obtener imágenes de reporte inexistente devuelve 404 Not Found")
+    void givenNonExistentReportId_whenGetImages_thenReturnsNotFound() {
+        String fakeId = new ObjectId().toHexString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(loginUtils.obtenerTokenUsuario());
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/reports/" + fakeId + "/images",
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+
+    // ------------------------------------------- GET_ALL_COMMENTS_BY_REPORT -------------------------------------------- //
+
+
+    @Test
+    @DisplayName("Obtener todos los comentarios de un reporte paginados correctamente")
+    void givenReportWithComments_whenGetComments_thenReturnsPaginatedList() {
+        // Insertar comentarios
+        List<Comment> comentarios = IntStream.range(1, 6)
+                .mapToObj(i -> {
+                    Comment c = new Comment();
+                    c.setId(new ObjectId());
+                    c.setUserId(testReports.get(0).getId());
+                    c.setUserName("Usuario " + i);
+                    c.setReportId(testReports.get(0).getId());
+                    c.setComment("Este es el comentario número " + i);
+                    c.setCreatedAt(LocalDateTime.now().minusMinutes(i));
+                    c.setCommentStatus(CommentStatus.PUBLISHED);
+                    return c;
+                }).toList();
+
+        mongoTemplate.insertAll(comentarios);
+        Report report = testReports.get(0);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(loginUtils.obtenerTokenUsuario());
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<CommentPaginatedResponse> response = restTemplate.exchange(
+                "/api/v1/reports/" + report.getId().toHexString() + "/comments?page=0&size=5",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        CommentPaginatedResponse body = response.getBody();
+        assertNotNull(body);
+        assertEquals(5, body.content().size());
+        assertEquals(0, body.page());
+        assertEquals(5, body.size());
+        assertEquals(5, body.totalElements());
+        assertEquals(1, body.totalPages());
+    }
+
+    @Test
+    @DisplayName("Obtener comentarios de reporte válido pero sin comentarios")
+    void givenReportWithoutComments_whenGetComments_thenReturnsEmptyPage() {
+        Report report = testReports.get(1);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(loginUtils.obtenerTokenUsuario());
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<CommentPaginatedResponse> response = restTemplate.exchange(
+                "/api/v1/reports/" + report.getId().toHexString() + "/comments?page=0&size=5",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        CommentPaginatedResponse body = response.getBody();
+        assertNotNull(body);
+        assertEquals(0, body.content().size());
+        assertEquals(0, body.totalElements());
+        assertEquals(0, body.totalPages());
+    }
+
+    @Test
+    @DisplayName("Obtener comentarios con ID inválido devuelve 400")
+    void givenInvalidReportId_whenGetComments_thenReturnsBadRequest() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(loginUtils.obtenerTokenUsuario());
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/reports/invalid-id/comments",
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Obtener comentarios de reporte inexistente devuelve 404")
+    void givenNonExistentReportId_whenGetComments_thenReturnsNotFound() {
+        String fakeId = new ObjectId().toHexString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(loginUtils.obtenerTokenUsuario());
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/reports/" + fakeId + "/comments",
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
 
 }
 

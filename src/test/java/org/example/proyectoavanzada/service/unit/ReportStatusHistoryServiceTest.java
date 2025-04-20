@@ -5,7 +5,9 @@ import co.edu.uniquindio.proyecto.dto.report.ReportStatusHistoryResponse;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatusHistory;
 import co.edu.uniquindio.proyecto.exception.report.HistoryNotFoundException;
+import co.edu.uniquindio.proyecto.repository.ReportRepository;
 import co.edu.uniquindio.proyecto.repository.ReportStatusHistoryRepository;
+import co.edu.uniquindio.proyecto.repository.UserRepository;
 import co.edu.uniquindio.proyecto.service.implementations.ReportStatusHistoryServiceImpl;
 import co.edu.uniquindio.proyecto.service.mapper.ReportStatusHistoryMapper;
 import org.bson.types.ObjectId;
@@ -22,10 +24,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -37,6 +37,10 @@ class ReportStatusHistoryServiceTest {
     private ReportStatusHistoryRepository historyRepository;
     @Mock
     private ReportStatusHistoryMapper historyMapper;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private ReportRepository reportRepository;
 
     @InjectMocks
     private ReportStatusHistoryServiceImpl historyService;
@@ -72,7 +76,9 @@ class ReportStatusHistoryServiceTest {
         return history;
     }
 
-    // ------------------------- createHistory -------------------------
+
+    // ------------------------------------------- CREATE_HISTORY --------------------------------------------
+
 
     @Test
     @DisplayName("createHistory - Debe crear entrada de historial correctamente")
@@ -113,7 +119,8 @@ class ReportStatusHistoryServiceTest {
     }
 
 
-    // ------------------------- getHistoryById -------------------------
+    // ------------------------------------------- GET_HISTORY_BY_ID --------------------------------------------
+
 
     @Test
     @DisplayName("getHistoryById - Debe retornar historial cuando existe")
@@ -169,6 +176,10 @@ class ReportStatusHistoryServiceTest {
         verify(historyRepository, never()).findById(any());
     }
 
+
+    // ------------------------------------------- GET_HISTORY_BY_REPORT_ID --------------------------------------------
+
+
     @Test
     @DisplayName("getHistoryByReportId - Debe retornar historial paginado correctamente")
     void getHistoryByReportId_ShouldReturnPaginatedResult() {
@@ -176,11 +187,12 @@ class ReportStatusHistoryServiceTest {
         String reportId = "507f1f77bcf86cd799439011";
         int page = 1;
         int size = 2;
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(0, size);
 
         List<ReportStatusHistory> content = testHistories.subList(0, 2);
         Page<ReportStatusHistory> mockPage = new PageImpl<>(content, pageable, 5);
 
+        when(reportRepository.findById(new ObjectId(reportId))).thenReturn(mock());
         when(historyRepository.findByReportId(new ObjectId(reportId), pageable)).thenReturn(mockPage);
         when(historyMapper.toListResponse(content)).thenReturn(content.stream().map(h -> new ReportStatusHistoryResponse(
                 h.getId().toHexString(), h.getReportId().toHexString(), h.getUserId().toHexString(),
@@ -206,6 +218,7 @@ class ReportStatusHistoryServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<ReportStatusHistory> emptyPage = Page.empty(pageable);
 
+        when(reportRepository.findById(new ObjectId(reportId))).thenReturn(mock());
         when(historyRepository.findByReportId(new ObjectId(reportId), pageable)).thenReturn(emptyPage);
         when(historyMapper.toListResponse(List.of())).thenReturn(List.of());
 
@@ -234,6 +247,9 @@ class ReportStatusHistoryServiceTest {
     }
 
 
+    // ------------------------------------------- GET_HISTORY_BY_USER_ID --------------------------------------------
+
+
     @Test
     @DisplayName("getHistoryByUserId - Debe retornar historial paginado correctamente")
     void getHistoryByUserId_ShouldReturnPaginatedResult() {
@@ -241,11 +257,12 @@ class ReportStatusHistoryServiceTest {
         String userId = "507f1f77bcf86cd799439021";
         int page = 1;
         int size = 2;
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(0, size);
         List<ReportStatusHistory> content = List.of(testHistories.get(0));
 
         Page<ReportStatusHistory> mockPage = new PageImpl<>(content, pageable, 1);
 
+        when(userRepository.findById(new ObjectId(userId))).thenReturn(mock());
         when(historyRepository.findByUserId(new ObjectId(userId), pageable)).thenReturn(mockPage);
         when(historyMapper.toListResponse(content)).thenReturn(content.stream().map(h -> new ReportStatusHistoryResponse(
                 h.getId().toHexString(), h.getReportId().toHexString(), h.getUserId().toHexString(),
@@ -270,6 +287,7 @@ class ReportStatusHistoryServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<ReportStatusHistory> emptyPage = Page.empty(pageable);
 
+        when(userRepository.findById(new ObjectId(userId))).thenReturn(mock());
         when(historyRepository.findByUserId(new ObjectId(userId), pageable)).thenReturn(emptyPage);
         when(historyMapper.toListResponse(List.of())).thenReturn(List.of());
 
@@ -297,6 +315,9 @@ class ReportStatusHistoryServiceTest {
     }
 
 
+    // ------------------------------------------- GET_HISTORY_BY_PREVIOUS_STATUS --------------------------------------------
+
+
     @Test
     @DisplayName("getHistoryByPreviousStatus - Debe retornar historial paginado filtrado por estado anterior")
     void getHistoryByPreviousStatus_ShouldReturnPaginatedResult() {
@@ -305,7 +326,7 @@ class ReportStatusHistoryServiceTest {
         ReportStatus prevStatus = ReportStatus.PENDING;
         int page = 1;
         int size = 2;
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(0, size);
 
         List<ReportStatusHistory> filtered = testHistories.stream()
                 .filter(h -> h.getReportId().toHexString().equals(reportId) && h.getPreviousStatus() == prevStatus)
@@ -365,6 +386,9 @@ class ReportStatusHistoryServiceTest {
     }
 
 
+    // ----------------------------------------- GET_HISTORY_BY_NEW_STATUS_AND_DATE_RANGE --------------------------------------------
+
+
     @Test
     @DisplayName("getHistoryByNewStatusAndDateRange - Debe retornar historial paginado filtrado por estado y fechas")
     void getHistoryByNewStatusAndDateRange_ShouldReturnPaginatedResult() {
@@ -375,7 +399,7 @@ class ReportStatusHistoryServiceTest {
         LocalDateTime end = LocalDateTime.now();
         int page = 1;
         int size = 5;
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(0, size);
 
         List<ReportStatusHistory> filtered = testHistories.stream()
                 .filter(h -> h.getReportId().toHexString().equals(reportId)
@@ -439,6 +463,10 @@ class ReportStatusHistoryServiceTest {
         verify(historyRepository, never()).findByReportIdAndNewStatusAndDateRange(any(), any(), any(), any(), any());
     }
 
+
+    // ------------------------------------------- COUNT_HISTORIES_BY_REPORT_ID --------------------------------------------
+
+
     @Test
     @DisplayName("countHistoryByReportId - Debe retornar el número correcto de cambios de estado")
     void countHistoryByReportId_ShouldReturnCorrectCount() {
@@ -472,6 +500,9 @@ class ReportStatusHistoryServiceTest {
     }
 
 
+    // ------------------------------------------- GET_HISTORY_BY_DATE_RANGE --------------------------------------------
+
+
     @Test
     @DisplayName("getHistoryByDateRange - Debe retornar historial filtrado por fechas")
     void getHistoryByDateRange_ShouldReturnFilteredHistory() {
@@ -481,7 +512,7 @@ class ReportStatusHistoryServiceTest {
         LocalDateTime end = LocalDateTime.now();
         int page = 1;
         int size = 2;
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(0, size);
 
         List<ReportStatusHistory> filtered = testHistories.stream()
                 .filter(h -> h.getReportId().toHexString().equals(reportId)

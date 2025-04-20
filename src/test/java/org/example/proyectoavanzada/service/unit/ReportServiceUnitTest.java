@@ -1,11 +1,5 @@
 package org.example.proyectoavanzada.service.unit;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import java.time.LocalDateTime;
-import java.util.*;
-
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.comment.CommentResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
@@ -38,7 +32,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.security.access.AccessDeniedException;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReportServiceUnitTest {
@@ -90,7 +90,7 @@ class ReportServiceUnitTest {
                 10.0
         );
 
-        // Inicializar una lista con 5 reportes precreados en la "BD"
+        // Inicializar una lista con 5 reportes pre-creados en la "BD"
         preexistingReports = new ArrayList<>();
         for (int i = 1; i <= 5; i++) {
             Report report = new Report();
@@ -109,28 +109,40 @@ class ReportServiceUnitTest {
         lenient().when(securityUtils.getCurrentUsername()).thenReturn(currentUsername);
 
         // Configurar el ReportResponse que se espera al crear un reporte nuevo
-        Report newReportEntity = new Report();
-        newReportEntity.setId(new ObjectId());
-        newReportEntity.setTitle(reportRequest.title());
-        newReportEntity.setDescription(reportRequest.description());
-        newReportEntity.setCategoryList(reportRequest.categoryList());
-        newReportEntity.setLocation(new org.springframework.data.mongodb.core.geo.GeoJsonPoint(reportRequest.longitude(), reportRequest.latitude()));
-        newReportEntity.setReportStatus(ReportStatus.PENDING);
-        newReportEntity.setUserEmail(currentUsername);
+        Report newReportEntity = getNewReportEntity();
 
         reportResponse = new ReportResponse(
                 newReportEntity.getId().toHexString(),
                 newReportEntity.getTitle(),
                 newReportEntity.getDescription(),
                 newReportEntity.getCategoryList(),
-                ((org.springframework.data.mongodb.core.geo.GeoJsonPoint)newReportEntity.getLocation()).getY(),
-                ((org.springframework.data.mongodb.core.geo.GeoJsonPoint)newReportEntity.getLocation()).getX(),
+                ((GeoJsonPoint)newReportEntity.getLocation()).getY(),
+                ((GeoJsonPoint)newReportEntity.getLocation()).getX(),
                 newReportEntity.getReportStatus().toString(),
                 LocalDateTime.now(),
                 0,
                 currentUserId
         );
     }
+
+    private Report getNewReportEntity() {
+        Report newReportEntity = new Report();
+        newReportEntity.setId(new ObjectId());
+        newReportEntity.setTitle(reportRequest.title());
+        newReportEntity.setDescription(reportRequest.description());
+        newReportEntity.setCategoryList(reportRequest.categoryList());
+        newReportEntity.setLocation(new GeoJsonPoint(reportRequest.longitude(), reportRequest.latitude()));
+        newReportEntity.setReportStatus(ReportStatus.PENDING);
+        newReportEntity.setUserEmail(currentUsername);
+        return newReportEntity;
+    }
+
+    private Report getReport() {
+        return getNewReportEntity();
+    }
+
+
+    // ------------------------------------------- CREATE_REPORT --------------------------------------------
 
 
     @Test
@@ -162,17 +174,6 @@ class ReportServiceUnitTest {
         verify(reportMapper, times(1)).toResponse(newReport);
     }
 
-    private Report getReport() {
-        Report newReport = new Report();
-        newReport.setId(new ObjectId());
-        newReport.setTitle(reportRequest.title());
-        newReport.setDescription(reportRequest.description());
-        newReport.setCategoryList(reportRequest.categoryList());
-        newReport.setLocation(new org.springframework.data.mongodb.core.geo.GeoJsonPoint(reportRequest.longitude(), reportRequest.latitude()));
-        newReport.setReportStatus(ReportStatus.PENDING);
-        newReport.setUserEmail(currentUsername);
-        return newReport;
-    }
 
     @Test
     @DisplayName("createReport: Fallo al intentar crear reporte duplicado")
@@ -191,6 +192,10 @@ class ReportServiceUnitTest {
         verify(securityUtils, never()).getCurrentUserId();
         verify(reportMapper, never()).toEntity(any(), anyString(), anyString());
     }
+
+
+    // ------------------------------------------- GET_REPORT_BY_ID -------------------------------------------- //
+
 
     @Test
     @DisplayName("getReportById: Reporte encontrado en base con 5 reportes pre-creados")
@@ -235,13 +240,17 @@ class ReportServiceUnitTest {
         when(reportRepository.findById(eq(nonExistingId))).thenReturn(Optional.empty());
 
         // Act & Assert
-        ReportNotFoundException exception = assertThrows(ReportNotFoundException.class, () -> {
+        assertThrows(ReportNotFoundException.class, () -> {
             reportService.getReportById(idHex);
         }, "Se debe lanzar ReportNotFoundException al no encontrar el reporte");
 
         verify(reportRepository, times(1)).findById(eq(nonExistingId));
         verify(reportMapper, never()).toResponse(any());
     }
+
+
+    // ------------------------------------------- GET_REPORT_NEARS -------------------------------------------- //
+
 
     @Test
     @DisplayName("getReportsNearLocation: éxito sin categorías")
@@ -382,9 +391,9 @@ class ReportServiceUnitTest {
         verify(reportRepository).findNearbyReports(eq(point), eq(10000.0), eq(pageable));
     }
 
-    // ========================================================================
-    // PRUEBAS PARA softDeleteReport
-    // ========================================================================
+
+    // ------------------------------------------- DELETE_REPORT -------------------------------------------- //
+
 
     @Test
     @DisplayName("softDeleteReport - Debe cambiar estado a DELETED y guardar reporte cuando existe")
@@ -430,9 +439,9 @@ class ReportServiceUnitTest {
         verify(reportRepository, never()).save(any());
     }
 
-    // ========================================================================
-    // PRUEBAS PARA getAllImagesByReport
-    // ========================================================================
+
+    // ------------------------------------------- GET_ALL_IMAGES_BY_REPORT -------------------------------------------- //
+
 
     @Test
     @DisplayName("getAllImagesByReport - Debe retornar lista de imágenes cuando el reporte existe")
@@ -474,6 +483,9 @@ class ReportServiceUnitTest {
         verify(reportRepository).findById(new ObjectId(reportId));
         verify(imageService, never()).getAllImagesByReport(any());
     }
+
+
+    // ------------------------------------------- TOGGLE_VOTE -------------------------------------------- //
 
 
     @Test
@@ -562,25 +574,26 @@ class ReportServiceUnitTest {
     }
 
 
+    // ------------------------------------------- UPDATE_REPORT -------------------------------------------- //
+
+
     @Test
     @DisplayName("updateReport - Debe actualizar reporte existente correctamente")
     void updateReport_ShouldUpdateExistingReport_WhenValidData() {
         // Arrange
-        String reportId = "507f1f77bcf86cd799439011";
-        String userId = "507f1f77bcf86cd799439012";
+        String reportId = preexistingReports.getFirst().getId().toString();
         ReportUpdateDto request = new ReportUpdateDto(
                 "Nuevo título",
                 "Nueva descripción",
                 List.of(new CategoryRef("Nueva categoría"))
         );
 
-        Report existingReport = new Report();
-        existingReport.setId(new ObjectId(reportId));
-        existingReport.setTitle("Título antiguo");
+        Report existingReport = preexistingReports.getFirst();
 
-        Report updatedReport = new Report();
-        updatedReport.setId(new ObjectId(reportId));
+        Report updatedReport = existingReport;
         updatedReport.setTitle(request.title());
+        updatedReport.setDescription(request.description());
+        updatedReport.setCategoryList(request.categoryList());
 
         ReportResponse expectedResponse = new ReportResponse(
                 reportId,
@@ -592,11 +605,11 @@ class ReportServiceUnitTest {
                 "PENDING",
                 LocalDateTime.now(),
                 0,
-                userId
+                "3456gfddsdsad5s"
         );
 
         when(reportRepository.findById(new ObjectId(reportId))).thenReturn(Optional.of(existingReport));
-        when(securityUtils.getCurrentUserId()).thenReturn(userId);
+        when(securityUtils.getCurrentUserId()).thenReturn("dgfvffvfdv");
         when(reportRepository.save(any(Report.class))).thenReturn(updatedReport);
         when(reportMapper.toResponse(updatedReport)).thenReturn(expectedResponse);
 
@@ -675,6 +688,9 @@ class ReportServiceUnitTest {
         // Assert
         verify(securityUtils).getCurrentUserId();
     }
+
+
+    // ------------------------------------------- GET_COMMENTS_BY_REPORT_ID -------------------------------------------- //
 
 
     @Test
@@ -802,6 +818,9 @@ class ReportServiceUnitTest {
         assertEquals(size, result.size());
         verify(commentService).getCommentsByReportId(reportId, page, size);
     }
+
+
+    // ------------------------------------------- UPDATE_REPORT_STATUS -------------------------------------------- //
 
 
     @Test

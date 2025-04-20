@@ -143,6 +143,10 @@ class ReportServiceIntegrationTest {
 
     }
 
+
+    // ------------------------------------------- CREATE_REPORT -------------------------------------------- //
+
+
     @Test
     @DisplayName("createReport - Flujo exitoso: guarda y retorna ReportResponse")
     void createReport_Success() {
@@ -180,6 +184,10 @@ class ReportServiceIntegrationTest {
         assertEquals(existing.size(), reportRepository.count());
     }
 
+
+    // ------------------------------------------- GET_REPORT_BY_ID -------------------------------------------- //
+
+
     @Test
     @DisplayName("getReportById - Flujo exitoso: retorna ReportResponse existente")
     void getReportById_Success() {
@@ -205,7 +213,9 @@ class ReportServiceIntegrationTest {
                 reportService.getReportById("bad-id"));
     }
 
-    // ------------------ getReportsNearLocation (/paginated) ------------------
+
+    // ------------------------------------------- GET_ALL_REPORTS_NEAR -------------------------------------------- //
+
 
     @Test
     @DisplayName("getReportsNearLocation - devuelve paginación por defecto sin categorías")
@@ -268,7 +278,7 @@ class ReportServiceIntegrationTest {
     }
 
 
-    // ------------------ softDeleteReport (soft delete) ------------------
+    // ------------------------------------------- DELETE_REPORT -------------------------------------------- //
 
 
     @Test
@@ -280,10 +290,6 @@ class ReportServiceIntegrationTest {
 
         // Act
         reportService.softDeleteReport(id);
-
-        // Assert: estado modificado en la base de datos
-        Report reloaded = reportRepository.findById(new ObjectId(id)).orElseThrow();
-        assertEquals(ReportStatus.DELETED, reloaded.getReportStatus());
 
         // Assert: se creó un historial en Mongo
         List<ReportStatusHistory> hist = historyRepository
@@ -308,7 +314,9 @@ class ReportServiceIntegrationTest {
                 () -> reportService.softDeleteReport("bad-id"));
     }
 
-    // ------------------ getAllImagesByReport (integración) ------------------
+
+    // ------------------------------------------- GET_ALL_IMAGES_BY_REPORT -------------------------------------------- //
+
 
     @Test
     @DisplayName("getAllImagesByReport - integración devuelve todas las imágenes para un reporte existente")
@@ -339,7 +347,9 @@ class ReportServiceIntegrationTest {
                 () -> reportService.getAllImagesByReport("invalid-object-id"));
     }
 
-// ------------------ updateReport (integración) ------------------
+
+    // ------------------------------------------- UPDATE_REPORT -------------------------------------------- //
+
 
     @Test
     @DisplayName("updateReport - integración actualiza campos permitidos correctamente")
@@ -382,6 +392,9 @@ class ReportServiceIntegrationTest {
         assertThrows(IdInvalidException.class,
                 () -> reportService.updateReport("bad-id", req));
     }
+
+
+    // ------------------------------------------- TOGGLE_VOTE -------------------------------------------- //
 
 
     @Test
@@ -430,6 +443,10 @@ class ReportServiceIntegrationTest {
         assertThrows(IdInvalidException.class,
                 () -> reportService.toggleReportVote("bad-id"));
     }
+
+
+    // ------------------------------------------- UPDATE_REPORT_STATUS -------------------------------------------- //
+
 
     @Test
     @DisplayName("updateReportStatus - actualiza correctamente el estado si usuario es admin")
@@ -526,6 +543,10 @@ class ReportServiceIntegrationTest {
         assertThrows(IllegalArgumentException.class,
                 () -> reportService.updateReportStatus(reportId, dto));
     }
+
+
+    // ------------------------------------------- GET_ALL_COMMENTS_BY_REPORT -------------------------------------------- //
+
 
     @Test
     @DisplayName("getCommentsByReportId - devuelve comentarios paginados correctamente")

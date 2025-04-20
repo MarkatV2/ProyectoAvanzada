@@ -52,11 +52,6 @@ class UserControllerUnitTest {
 
     @MockitoBean
     private UserService userService;
-    @MockitoBean
-    private UserRepository userRepository;
-
-    @MockitoBean
-    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -100,6 +95,10 @@ class UserControllerUnitTest {
         user.setAccountStatus(AccountStatus.ACTIVATED);
         user.setRol(Rol.USER);
     }
+
+
+    // ------------------------------------------- CREATED_USER -------------------------------------------- //
+
 
     @Test
     @DisplayName("POST /users - Creación exitosa de usuario")
@@ -164,6 +163,9 @@ class UserControllerUnitTest {
 
         verify(userService).registerUser(any(UserRegistration.class));
     }
+
+
+    // ------------------------------------------- GET_ALL_USERS -------------------------------------------- //
 
 
     @Test
@@ -264,6 +266,9 @@ class UserControllerUnitTest {
     }
 
 
+    // ------------------------------------------- GET_USER_BY_ID -------------------------------------------- //
+
+
     @Test
     @DisplayName("GET /users/{userId} - ObtenerUsuario")
     void getUser_SelfRequest_ShouldReturnUser() throws Exception {
@@ -298,6 +303,10 @@ class UserControllerUnitTest {
 
         verify(userService).getUser(invalidUserId);
     }
+
+
+    // ------------------------------------------- UPDATE_USER -------------------------------------------- //
+
 
     @Test
     @DisplayName("PUT /users/{id} - Actualización exitosa de usuario")
@@ -421,6 +430,10 @@ class UserControllerUnitTest {
         verify(userService, never()).updateUser(anyString(), any(UserUpdateRequest.class));
     }
 
+
+    // ------------------------------------------- UPDATE_PASSWORD -------------------------------------------- //
+
+
     @Test
     @DisplayName("❌ PATCH /users/{id}/password - Usuario no existe")
     void updateUserPassword_ShouldReturn404_WhenUserNotFound() throws Exception {
@@ -484,13 +497,16 @@ class UserControllerUnitTest {
     }
 
 
+    // ------------------------------------------- DELETE_USER -------------------------------------------- //
+
+
     @Test
     @DisplayName("✅ DELETE /users/{id} - Eliminación exitosa")
     void deleteUser_ShouldReturnNoContent_WhenUserExists() throws Exception {
         // Arrange
         String userId = testUsers.get(0).id();
 
-        doNothing().when(userService).deleteUser(userId);
+        when(userService.deleteUser(userId)).thenReturn(new SuccessResponse("el usuario se elimino satisfactoriamente"));
 
         // Act & Assert
         mockMvc.perform(delete("/api/v1/users/{id}", userId)
@@ -516,7 +532,6 @@ class UserControllerUnitTest {
 
         verify(userService).deleteUser(invalidId);
     }
-
 
 
 }

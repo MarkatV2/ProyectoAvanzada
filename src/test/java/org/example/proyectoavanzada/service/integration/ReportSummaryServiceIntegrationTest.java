@@ -88,6 +88,9 @@ public class ReportSummaryServiceIntegrationTest {
         return report;
     }
 
+
+    // ------------------------------------------- GET_REPORT_WITH_FILTERS -------------------------------------------- //
+
     @Test
     @DisplayName("Filtrar por rango de fechas devuelve los reportes esperados")
     void whenFilterByDateRange_thenReturnExpectedReports() {
@@ -154,11 +157,15 @@ public class ReportSummaryServiceIntegrationTest {
 
         PaginatedReportSummaryResponse response = reportSummaryService.getFilteredReports(filter, 1, 10);
 
-        assertEquals(3, response.content().size());
+        assertEquals(2, response.content().size());
     }
 
 
+    // ------------------------------------------- GENERATE_PDF -------------------------------------------- //
+
+
     @Test
+    @DisplayName("Genera un PDF con todos los reportes")
     void testGeneratePdfFromAllReports() {
         // Sin filtros
         ReportFilterDTO emptyFilter = new ReportFilterDTO(null, null, null, null, 0);

@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ContextConfiguration(classes = ProyectoApplication.class)
 public class AuthServiceIntegrationTest {
+
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -70,6 +71,10 @@ public class AuthServiceIntegrationTest {
                 .toList();
         userRepository.saveAll(testUsers);
     }
+
+
+    // ------------------------------------------- LOGIN -------------------------------------------- //
+
 
     @Test
     @DisplayName("authenticate - éxito con usuario activado")
@@ -124,6 +129,10 @@ public class AuthServiceIntegrationTest {
         assertNotNull(response.token());
         assertNotNull(response.refreshToken());
     }
+
+
+    // ------------------------------------------- REFRESH_ACCESS_TOKEN -------------------------------------------- //
+
 
     @Test
     @DisplayName("refreshAccessToken - retorna nuevo token si el refresh es válido")
@@ -180,8 +189,6 @@ public class AuthServiceIntegrationTest {
         assertThrows(UserNotFoundException.class,
                 () -> authService.refreshAccessToken(tokenWithInvalidUser));
     }
-
-
 
 
 }

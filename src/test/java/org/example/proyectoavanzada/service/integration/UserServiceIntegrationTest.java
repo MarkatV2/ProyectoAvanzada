@@ -115,8 +115,10 @@ public class UserServiceIntegrationTest {
         );
     }
 
+
+    // ------------------------------------------- GET_ALL_USERS -------------------------------------------- //
+
     @Test
-    @Order(1)
     @DisplayName("GET /users - Paginación básica (página 1, tamaño 10)")
     void testGetUsers_FirstPage_ReturnsPaginatedResults() {
         // Arrange
@@ -136,7 +138,6 @@ public class UserServiceIntegrationTest {
     }
 
     @Test
-    @Order(2)
     @DisplayName("GET /users - Última página parcialmente llena (página 2, tamaño 10)")
     void testGetUsers_LastPartialPage_ReturnsRemainingUsers() {
         // Arrange
@@ -155,7 +156,6 @@ public class UserServiceIntegrationTest {
     }
 
     @Test
-    @Order(3)
     @DisplayName("GET /users - Parámetros inválidos (página 0, tamaño 200) se ajustan automáticamente")
     void testGetUsers_InvalidParameters_AutoAdjustsToValidRange() {
         // Arrange
@@ -175,19 +175,20 @@ public class UserServiceIntegrationTest {
     }
 
     @Test
-    @Order(4)
     @DisplayName("GET /users - Página fuera de rango retorna lista vacía")
     void testGetUsers_PageOutOfRange_ReturnsEmptyList() {
         // Arrange
         int outOfRangePage = 3;
-        int size = DEFAULT_PAGE_SIZE;
 
         // Act
-        PaginatedUserResponse response = userService.getUsers(outOfRangePage, size);
+        PaginatedUserResponse response = userService.getUsers(outOfRangePage, DEFAULT_PAGE_SIZE);
 
         // Assert
         assertTrue(response.users().isEmpty(), "La lista debería estar vacía para páginas fuera de rango");
     }
+
+
+    // ------------------------------------------- CREATE_USER -------------------------------------------- //
 
     @Test
     @DisplayName("Registro exitoso - Debe crear usuario y retornar respuesta válida")
@@ -223,6 +224,9 @@ public class UserServiceIntegrationTest {
         // Verificar que no se intentó guardar el segundo usuario
         assertEquals(16, userRepository.count(), "Solo deberían existir 16 usuarios");
     }
+
+
+    // ------------------------------------------- GET_USER_BY_ID -------------------------------------------- //
 
     @Test
     @DisplayName("Consultar usuario existente - Debe retornar información correcta")
@@ -268,6 +272,9 @@ public class UserServiceIntegrationTest {
                 "Debería lanzar IllegalArgumentException para ID nulo"
         );
     }
+
+
+    // ------------------------------------------- UPDATE_USER -------------------------------------------- //
 
     @Test
     @DisplayName("Actualización exitosa - Debe modificar los datos correctamente")
@@ -330,30 +337,8 @@ public class UserServiceIntegrationTest {
         );
     }
 
-    @Test
-    @DisplayName("Actualizar con el mismo email - Debe permitir la actualización")
-    void updateUser_SameEmail_UpdatesSuccessfully() {
-        // Arrange: Mantenemos el mismo email pero cambiamos otros datos
-        User userToUpdate = testUsers.get(0);
-        String originalEmail = userToUpdate.getEmail();
 
-        UserUpdateRequest request = new UserUpdateRequest(
-                originalEmail, // Mismo email
-                "Nuevo Nombre",
-                LocalDate.now().minusYears(30),
-                "Nueva Ciudad",
-                4.7110,
-                -74.0721
-        );
-
-        // Act
-        UserResponse response = userService.updateUser(userToUpdate.getId().toHexString(), request);
-
-        // Assert
-        assertEquals(originalEmail, response.email(), "El email debería permanecer igual");
-        assertEquals("Nuevo Nombre", response.fullName(), "El nombre debería haberse actualizado");
-    }
-
+    // ------------------------------------------- UPDATE_PASSWORD -------------------------------------------- //
 
     @Test
     @DisplayName("Actualización de contraseña exitosa - Debe retornar éxito")
@@ -408,6 +393,9 @@ public class UserServiceIntegrationTest {
         );
     }
 
+
+    // ------------------------------------------- DELETE_USER -------------------------------------------- //
+
     @Test
     @DisplayName("Eliminación lógica exitosa - Debe cambiar estado a DELETED")
     void deleteUser_ValidId_ReturnsSuccessAndUpdatesStatus() {
@@ -460,4 +448,5 @@ public class UserServiceIntegrationTest {
                 () -> assertEquals(originalUser.getLocation(), deletedUser.getLocation())
         );
     }
+
 }

@@ -22,7 +22,7 @@ public interface ReportSummaryService {
     /**
      * Genera un archivo PDF con el resumen de los reportes.
      *
-     * @param reports lista de reportes a incluir en el PDF.
+     * @param paginated lista de reportes a incluir en el PDF.
      * @return contenido del PDF en bytes.
      */
     byte[] generatePdf(PaginatedReportSummaryResponse paginated);

@@ -81,6 +81,10 @@ public class VerificationCodeServiceIntegrationTest {
                 .toList();
     }
 
+
+    // ------------------------------------------- VALIDATE_ACCOUNT -------------------------------------------- //
+
+
     @Test
     @DisplayName("validateCodeActivation - activa cuenta exitosamente con código válido")
     void validateCodeActivation_ValidCode_ActivatesAccount() {
@@ -111,6 +115,9 @@ public class VerificationCodeServiceIntegrationTest {
                 () -> verificationService.validateCodeActivation(expired.getCode()));
     }
 
+
+    // ------------------------------------------- GENERATED_AND_SEND_CODE -------------------------------------------- //
+
     @Test
     @DisplayName("generateAndSendCode - genera y envía código de activación")
     void generateAndSendCode_SendsActivationEmail() {
@@ -138,6 +145,10 @@ public class VerificationCodeServiceIntegrationTest {
         verify(emailService, times(1))
                 .sendPasswordResetEmail(eq(user.getEmail()), anyString());
     }
+
+
+    // ------------------------------------------- RESEND_CODE -------------------------------------------- //
+
 
     @Test
     @DisplayName("Reenvío de código: con userId válido elimina códigos anteriores y genera uno nuevo")
@@ -174,6 +185,9 @@ public class VerificationCodeServiceIntegrationTest {
                 "Debe lanzarse UserNotFoundException si el usuario no existe"
         );
     }
+
+
+    // ------------------------------------------- RESET_PASSWORD -------------------------------------------- //
 
 
     @Test

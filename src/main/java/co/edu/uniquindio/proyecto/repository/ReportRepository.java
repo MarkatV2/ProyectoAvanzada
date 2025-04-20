@@ -33,6 +33,11 @@ public interface ReportRepository extends MongoRepository<Report, ObjectId> {
      */
     boolean existsByTitleAndDescription(String title, String description);
 
+    @Override
+    @Query("""
+            {'_id': ?0,'reportStatus': { $ne: 'DELETED' }}""")
+    Optional<Report> findById(ObjectId id);
+
     /**
      * Busca los reportes cercanos a una ubicación específica, dentro de una distancia máxima.
      * La búsqueda es realizada usando la indexación geoespacial 2DSPHERE en MongoDB.
@@ -64,7 +69,6 @@ public interface ReportRepository extends MongoRepository<Report, ObjectId> {
      * Obtiene un reporte por su ID, solo si el estado del reporte no es "DELETED".
      * Esto asegura que no se recuperen reportes eliminados.
      *
-     * @param objectId Identificador único del reporte.
      * @return Un {@link Optional} que contiene el reporte si existe, {@link Optional#empty()}
      *         si no se encuentra o si el reporte está marcado como "DELETED".
      */

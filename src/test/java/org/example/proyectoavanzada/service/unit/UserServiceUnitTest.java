@@ -112,6 +112,10 @@ class UserServiceUnitTest {
         return user;
     }
 
+
+    // ------------------------------------------- CREATE_USER -------------------------------------------- //
+
+
     @Test
     @DisplayName("✅ Registrar usuario exitosamente con base simulada de 5 usuarios")
     void testRegisterUserSuccess() {
@@ -161,7 +165,9 @@ class UserServiceUnitTest {
         verify(verificationService, never()).generateAndSendCode(any(), any());
     }
 
-    //GET userById
+
+    // ------------------------------------------- GET_USER_BY_ID -------------------------------------------- //
+
 
     @Test
     @DisplayName("✅ Obtener usuario por ID exitosamente")
@@ -211,7 +217,9 @@ class UserServiceUnitTest {
         verify(userMapper, never()).toUserResponse(any());
     }
 
-    //GET ALL users
+
+    // ------------------------------------------- GET_ALL_USERS -------------------------------------------- //
+
 
     @Test
     @DisplayName("✅ Obtener usuarios paginados exitosamente con parámetros válidos")
@@ -256,7 +264,6 @@ class UserServiceUnitTest {
         assertEquals(2, result.totalPages());
         assertEquals(toIndex - fromIndex, result.users().size());
     }
-
 
     @Test
     @DisplayName("⚠️ Ajuste de parámetros cuando page < 1 y size > 100")
@@ -304,7 +311,9 @@ class UserServiceUnitTest {
         assertThrows(ServiceUnavailableException.class, () -> userService.getUsers(page, size));
     }
 
-    //UPDATE user
+
+    // ------------------------------------------- UPDATE_USER -------------------------------------------- //
+
 
     @Test
     @DisplayName("✅ Actualizar usuario exitosamente")
@@ -419,7 +428,9 @@ class UserServiceUnitTest {
         verify(userRepository, never()).save(any());
     }
 
-    //ACTUALIZAR contraseña
+
+    // ------------------------------------------- UPDATE_PASSWORD -------------------------------------------- //
+
 
     @Test
     @DisplayName("✅ Cambiar contraseña exitosamente")
@@ -454,7 +465,6 @@ class UserServiceUnitTest {
         verify(userRepository).save(existingUser);
     }
 
-
     @Test
     @DisplayName("❌ Error al cambiar contraseña: usuario no encontrado")
     void testUpdateUserPasswordUserNotFound() {
@@ -471,7 +481,6 @@ class UserServiceUnitTest {
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
     }
-
 
     @Test
     @DisplayName("❌ Error al cambiar contraseña: contraseña actual incorrecta")
@@ -495,7 +504,9 @@ class UserServiceUnitTest {
         verify(userRepository, never()).save(any());
     }
 
-    //DELETED users
+
+    // ------------------------------------------- DELETED_USER -------------------------------------------- //
+
 
     @Test
     @DisplayName("Eliminar usuario existente - Debe marcarlo como DELETED y retornar SuccessResponse")

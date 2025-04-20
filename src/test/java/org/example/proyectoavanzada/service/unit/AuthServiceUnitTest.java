@@ -7,10 +7,10 @@ import co.edu.uniquindio.proyecto.dto.user.LoginRequest;
 import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
 import co.edu.uniquindio.proyecto.entity.user.Rol;
 import co.edu.uniquindio.proyecto.entity.user.User;
-import co.edu.uniquindio.proyecto.exception.user.InvalidRefreshTokenException;
-import co.edu.uniquindio.proyecto.exception.user.RefreshTokenExpiredException;
 import co.edu.uniquindio.proyecto.exception.auth.AccountDisabledException;
 import co.edu.uniquindio.proyecto.exception.user.InvalidPasswordException;
+import co.edu.uniquindio.proyecto.exception.user.InvalidRefreshTokenException;
+import co.edu.uniquindio.proyecto.exception.user.RefreshTokenExpiredException;
 import co.edu.uniquindio.proyecto.exception.user.UserNotFoundException;
 import co.edu.uniquindio.proyecto.repository.UserRepository;
 import co.edu.uniquindio.proyecto.service.implementations.AuthServiceImpl;
@@ -24,11 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.List;
@@ -60,7 +56,6 @@ class AuthServiceUnitTest {
     private final String EXPIRED_REFRESH_TOKEN = "expired.refresh.token";
     private final String INVALID_REFRESH_TOKEN = "invalid.refresh.token";
     private final String USER_ID = "507f1f77bcf86cd799439011";
-    private final String NEW_ACCESS_TOKEN = "new.access.token";
 
     private List<User> testUsers;
 
@@ -86,15 +81,18 @@ class AuthServiceUnitTest {
         return user;
     }
 
+
+    // -----------------------------------------------AUTHENTICATE---------------------------------------
+
+
     @Test
     @DisplayName("authenticate - Debe retornar token JWT cuando credenciales son válidas")
     void authenticate_ShouldReturnJwt_WhenValidCredentials() {
         // Arrange
         LoginRequest request = new LoginRequest(VALID_EMAIL, VALID_PASSWORD);
         User testUser = testUsers.get(0); // Usuario activado
-        UserDetails userDetails = testUser;
 
-        when(userDetailsService.loadUserByUsername(VALID_EMAIL)).thenReturn(userDetails);
+        when(userDetailsService.loadUserByUsername(VALID_EMAIL)).thenReturn(testUser);
         when(authenticationManager.authenticate(any()))
                 .thenReturn(new UsernamePasswordAuthenticationToken(testUser, null, testUser.getAuthorities()));
         String JWT_TOKEN = "generated.jwt.token";
@@ -152,13 +150,12 @@ class AuthServiceUnitTest {
     @DisplayName("authenticate - Debe lanzar AccountDisabledException cuando cuenta no está activada")
     void authenticate_ShouldThrowAccountDisabled_WhenAccountNotActivated() {
         // Arrange
-        LoginRequest request = new LoginRequest(VALID_EMAIL, VALID_PASSWORD);
-        User inactiveUser = testUsers.get(2); // Usuario con status PENDING
-        UserDetails userDetails = inactiveUser;
+        LoginRequest request = new LoginRequest(testUsers.get(2).getEmail(), "pass1");
+        User inactiveUser = testUsers.get(2);// Usuario con status PENDING
 
-        when(userDetailsService.loadUserByUsername(VALID_EMAIL)).thenReturn(userDetails);
+        when(userDetailsService.loadUserByUsername(testUsers.get(2).getEmail())).thenReturn(inactiveUser);
         when(authenticationManager.authenticate(any()))
-                .thenReturn(new UsernamePasswordAuthenticationToken(inactiveUser, null, inactiveUser.getAuthorities()));
+                .thenThrow(DisabledException.class);
 
         // Act & Assert
         assertThrows(AccountDisabledException.class, () -> {
@@ -196,6 +193,9 @@ class AuthServiceUnitTest {
     }
 
 
+    //-------------------------------------REFRESH_ACCESS_TOKEN-------------------------------------------
+
+
     @Test
     @DisplayName("refreshAccessToken - Debe generar nuevo access token con refresh token válido")
     void refreshAccessToken_ShouldReturnNewAccessToken_WithValidRefreshToken() {
@@ -207,6 +207,7 @@ class AuthServiceUnitTest {
         doNothing().when(jwtUtils).validateRefreshToken(VALID_REFRESH_TOKEN);
         when(jwtUtils.extractUserId(VALID_REFRESH_TOKEN)).thenReturn(USER_ID);
         when(userRepository.findById(new ObjectId(USER_ID))).thenReturn(Optional.of(testUser));
+        String NEW_ACCESS_TOKEN = "new.access.token";
         when(jwtUtils.generateToken(testUser)).thenReturn(NEW_ACCESS_TOKEN);
 
         // Act
@@ -265,7 +266,7 @@ class AuthServiceUnitTest {
         when(userRepository.findById(new ObjectId(USER_ID))).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(UsernameNotFoundException.class, () -> {
+        assertThrows(UserNotFoundException.class, () -> {
             authService.refreshAccessToken(VALID_REFRESH_TOKEN);
         });
 

@@ -13,17 +13,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Criteria;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -65,6 +66,10 @@ class ReportSummaryServiceUnitTest {
                 10.0                                 // radio amplio
         );
     }
+
+
+    // ------------------------------------------- GET_FILTERED_REPORTS -------------------------------------------- //
+
 
     @Test
     @DisplayName("getFilteredReports - Debe retornar paginación correcta con resultados")
@@ -122,6 +127,9 @@ class ReportSummaryServiceUnitTest {
         assertEquals(0, resp.totalElements());
         verify(reportSummaryMapper).toReportSummaryDto(List.of());
     }
+
+
+    // ------------------------------------------- GENERATED_PDF -------------------------------------------- //
 
 
     @Test

@@ -77,6 +77,10 @@ public class UserControllerIntegrationTest {
         userRepository.save(user);
     }
 
+
+    // ------------------------------------------- GET_ALL_USERS -------------------------------------------- //
+
+
     @Test
     @DisplayName("GET /api/v1/users - Admin accede correctamente (200 OK)")
     void getUsers_AdminAccess_ReturnsOk() {
@@ -128,6 +132,10 @@ public class UserControllerIntegrationTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertTrue(response.getBody().contains("Token de autenticación inválido o ausente"));
     }
+
+
+    // ------------------------------------------- CREATE_USER -------------------------------------------- //
+
 
     @Test
     @DisplayName("POST /api/v1/users - Email duplicado (409 Conflict)")
@@ -265,6 +273,10 @@ public class UserControllerIntegrationTest {
         assertTrue(response.getBody().contains("La fecha de nacimiento debe ser en el pasado"));
     }
 
+
+    // ------------------------------------------- GET_USER_BY_ID -------------------------------------------- //
+
+
     @Test
     @DisplayName("GET /api/v1/users/{userId} - Admin obtiene usuario (200 OK)")
     void getUser_AdminAccess_ReturnsUser() throws Exception {
@@ -361,6 +373,10 @@ public class UserControllerIntegrationTest {
         // Assert
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
+
+
+    // ------------------------------------------- UPDATE_USER -------------------------------------------- //
+
 
     @Test
     @DisplayName("PUT /api/v1/users/{id} - Actualización exitosa por propio usuario (200 OK)")
@@ -538,6 +554,10 @@ public class UserControllerIntegrationTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
+
+    // ------------------------------------------- UPDATE_PASSWORD -------------------------------------------- //
+
+
     @Test
     @DisplayName("PATCH /api/v1/users/{id}/password - Actualización exitosa (200 OK)")
     void updateUserPassword_ValidRequest_ReturnsSuccess() {
@@ -615,7 +635,6 @@ public class UserControllerIntegrationTest {
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
-
     @Test
     @DisplayName("PATCH /api/v1/users/{id}/password - Validación fallida (400 Bad Request)")
     void updateUserPassword_InvalidData_ReturnsBadRequest() {
@@ -657,6 +676,10 @@ public class UserControllerIntegrationTest {
         // Assert
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
+
+
+    // ------------------------------------------- DELETED_REPORT -------------------------------------------- //
+
 
     @Test
     @DisplayName("DELETE /api/v1/users/{id} - Usuario elimina su propia cuenta (204 No Content)")
@@ -748,6 +771,5 @@ public class UserControllerIntegrationTest {
         user.setAccountStatus(AccountStatus.ACTIVATED);
         return userRepository.save(user);
     }
-
 
 }

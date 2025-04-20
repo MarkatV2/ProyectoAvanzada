@@ -1,27 +1,23 @@
 package org.example.proyectoavanzada.controller.unit;
 
 import co.edu.uniquindio.proyecto.controller.ReportController;
-import co.edu.uniquindio.proyecto.controller.UserController;
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.comment.CommentResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
 import co.edu.uniquindio.proyecto.dto.report.*;
 import co.edu.uniquindio.proyecto.entity.category.CategoryRef;
 import co.edu.uniquindio.proyecto.exception.global.IdInvalidException;
-import co.edu.uniquindio.proyecto.exception.global.ServiceUnavailableException;
 import co.edu.uniquindio.proyecto.exception.report.DuplicateReportException;
 import co.edu.uniquindio.proyecto.exception.report.ReportNotFoundException;
 import co.edu.uniquindio.proyecto.exceptionhandler.ErrorResponseBuilder;
 import co.edu.uniquindio.proyecto.exceptionhandler.global.GlobalExceptionHandler;
 import co.edu.uniquindio.proyecto.exceptionhandler.report.ReportExceptionHandler;
-import co.edu.uniquindio.proyecto.exceptionhandler.user.UserExceptionHandler;
 import co.edu.uniquindio.proyecto.service.interfaces.ReportService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.types.ObjectId;
 import org.example.proyectoavanzada.configuration.TestSecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -31,6 +27,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -90,6 +87,9 @@ public class ReportControllerTest {
     }
 
 
+    // ------------------------------------------- GET_ALL_REPORTS_WITH_FILTERS -------------------------------------------- //
+
+
     @Test
     @DisplayName("GET /api/v1/reports debe retornar 200 y una lista de reportes cercanos")
     void testGetReportsSuccess() throws Exception {
@@ -147,6 +147,10 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$.content", hasSize(5)));
     }
 
+
+    // ------------------------------------------- GET_REPORT_BY_ID -------------------------------------------- //
+
+
     @Test
     @DisplayName("GET /api/v1/reports/{id} retorna 200 cuando el reporte existe")
     void testGetReport_Success() throws Exception {
@@ -183,6 +187,9 @@ public class ReportControllerTest {
         mockMvc.perform(get("/api/v1/reports/{id}", "xxx"))
                 .andExpect(status().isBadRequest());
     }
+
+
+    // ------------------------------------------- CREATE_REPORT -------------------------------------------- //
 
 
     @Test
@@ -230,6 +237,9 @@ public class ReportControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$", hasSize(3)));
     }
+
+
+    // ------------------------------------------- UPDATE_REPORT -------------------------------------------- //
 
 
     @Test
@@ -294,6 +304,10 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$", hasSize(3)));
     }
 
+
+    // ------------------------------------------- DELETE_REPORT -------------------------------------------- //
+
+
     @Test
     @DisplayName("DELETE /api/v1/reports/{id} retorna 204 cuando se elimina correctamente")
     void testDeleteReport_Success() throws Exception {
@@ -327,6 +341,10 @@ public class ReportControllerTest {
         mockMvc.perform(delete("/api/v1/reports/{id}", invalidId))
                 .andExpect(status().isBadRequest());
     }
+
+
+    // ------------------------------------------- UPDATE_REPORT_STATUS -------------------------------------------- //
+
 
     @Test
     @DisplayName("PATCH /api/v1/reports/{id}/status retorna 200 cuando el estado se actualiza correctamente")
@@ -392,6 +410,9 @@ public class ReportControllerTest {
     }
 
 
+    // ------------------------------------------- TOGGLE_VOTE -------------------------------------------- //
+
+
     @Test
     @DisplayName("PATCH /api/v1/reports/{id}/votes retorna 204 cuando el voto se alterna correctamente")
     void testToggleVote_Success() throws Exception {
@@ -431,7 +452,9 @@ public class ReportControllerTest {
     }
 
 
-    // Imágenes del reporte
+    // ------------------------------------------- GET_ALL_IMAGES_BY_REPORT -------------------------------------------- //
+
+
     @Test
     @DisplayName("GET /api/v1/reports/{id}/images retorna 200 con lista de imágenes")
     void testGetAllImagesByReport_Success() throws Exception {
@@ -474,7 +497,9 @@ public class ReportControllerTest {
     }
 
 
-    // Comentarios del reporte
+    // ------------------------------------------- GET_ALL_COMMENTS_BY_REPORT -------------------------------------------- //
+
+
     @Test
     @DisplayName("GET /api/v1/reports/{id}/comments retorna 200 con comentarios paginados")
     void testGetCommentsByReport_Success() throws Exception {

@@ -72,6 +72,10 @@ class VerificationCodeServiceUnitTest {
         }
     }
 
+
+    // ------------------------------------------- GENERATE_AND_SEND_CODE -------------------------------------------- //
+
+
     @Test
     @DisplayName("generateAndSendCode should save code and send activation email when type is ACTIVATION")
     void testGenerateAndSendCode_Activation() {
@@ -101,6 +105,9 @@ class VerificationCodeServiceUnitTest {
         // Assert
         verify(codeRepository, times(1)).save(expectedCode);
     }
+
+
+    // ------------------------------------------- VALIDATE_CODE -------------------------------------------- //
 
 
     @Test
@@ -146,6 +153,9 @@ class VerificationCodeServiceUnitTest {
         verify(codeRepository, times(1)).delete(expiredCode);
     }
 
+
+    // ------------------------------------------- RESEND_CODE -------------------------------------------- //
+
     @Test
     @DisplayName("resendCode debería eliminar códigos previos y reenviar un nuevo código de ACTIVATION cuando el usuario existe")
     void testResendCode_Success() {
@@ -175,6 +185,10 @@ class VerificationCodeServiceUnitTest {
                 () -> verificationService.resendCode(testUser.getId().toHexString(), VerificationCodeType.ACTIVATION));
     }
 
+
+    // ------------------------------------------- PASSWORD_RESET_CODE -------------------------------------------- //
+
+
     @Test
     @DisplayName("sendPasswordResetCode debería eliminar códigos previos y enviar código de PASSWORD_RESET cuando el email existe")
     void testSendPasswordResetCode_Success() {
@@ -202,6 +216,10 @@ class VerificationCodeServiceUnitTest {
         assertThrows(UserNotFoundException.class,
                 () -> verificationService.sendPasswordResetCode("nonexistent@example.com"));
     }
+
+
+    // ------------------------------------------- RESET_PASSWORD_WITH_CODE-------------------------------------------- //
+
 
     @Test
     @DisplayName("resetPasswordWithCode: éxito cuando el código es PASSWORD_RESET y usuario existe")

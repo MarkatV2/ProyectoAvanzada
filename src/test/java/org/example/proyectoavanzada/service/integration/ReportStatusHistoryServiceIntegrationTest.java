@@ -3,12 +3,9 @@ package org.example.proyectoavanzada.service.integration;
 import co.edu.uniquindio.proyecto.ProyectoApplication;
 import co.edu.uniquindio.proyecto.dto.report.PaginatedHistoryResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportStatusHistoryResponse;
-import co.edu.uniquindio.proyecto.entity.category.CategoryRef;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatusHistory;
-import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
-import co.edu.uniquindio.proyecto.entity.user.Rol;
 import co.edu.uniquindio.proyecto.entity.user.User;
 import co.edu.uniquindio.proyecto.exception.report.HistoryNotFoundException;
 import co.edu.uniquindio.proyecto.exception.report.ReportNotFoundException;
@@ -24,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -86,6 +82,10 @@ public class ReportStatusHistoryServiceIntegrationTest {
         mongoTemplate.insert(r);
     }
 
+
+    // ------------------------------------------- CREATE_HISTORY -------------------------------------------- //
+
+
     @Test
     @DisplayName("Crear historial: crea y guarda un historial correctamente en la base de datos")
     void givenValidData_whenCreateHistory_thenHistoryIsSaved() {
@@ -109,6 +109,10 @@ public class ReportStatusHistoryServiceIntegrationTest {
         assertEquals(next, created.getNewStatus());
         assertNotNull(created.getChangedAt(), "La fecha de cambio debe haberse generado");
     }
+
+
+    // ------------------------------------------- GET_HISTORY_BY_ID -------------------------------------------- //
+
 
     @Test
     @DisplayName("Obtener historial por ID: retorna el historial correspondiente si existe")
@@ -141,6 +145,10 @@ public class ReportStatusHistoryServiceIntegrationTest {
         assertEquals("Historial no encontrado con ID: " + nonExistentId, ex.getMessage());
     }
 
+
+    // ------------------------------------------- GET_HISTORY_BY_REPORT_ID -------------------------------------------- //
+
+
     @Test
     @DisplayName("Buscar historial por ID de reporte inexistente debe lanzar ReportNotFoundException")
     void givenInvalidReportId_whenGetHistoryByReportId_thenThrowReportNotFoundException() {
@@ -169,6 +177,24 @@ public class ReportStatusHistoryServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("Buscar historial por ID de reporte devuelve correctamente la segunda página")
+    void givenMultipleHistories_whenGetHistoryByReportIdPage2_thenReturnsCorrectPagination() {
+        String reportId = testHistories.get(0).getReportId().toHexString();
+
+        PaginatedHistoryResponse response = reportStatusHistoryService.getHistoryByReportId(reportId, 2, 2);
+
+        assertEquals(2, response.page());
+        assertEquals(2, response.size());
+        assertEquals(5, response.totalElements());
+        assertEquals(3, response.totalPages());
+        assertEquals(2, response.content().size());
+    }
+
+
+    // ------------------------------------------- GET_HISTORY_BY_USER_ID -------------------------------------------- //
+
+
+    @Test
     @DisplayName("Buscar por ID de usuario: retorna historial paginado correctamente")
     void givenUserId_whenGetHistoryByUserId_thenReturnsPaginatedHistory() {
         // Act
@@ -184,7 +210,6 @@ public class ReportStatusHistoryServiceIntegrationTest {
     }
 
 
-
     @Test
     @DisplayName("Buscar historial por ID de usuario inexistente debe lanzar UserNotFoundException")
     void givenInvalidUserId_whenGetHistoryByUserId_thenThrowUserNotFoundException() {
@@ -197,19 +222,8 @@ public class ReportStatusHistoryServiceIntegrationTest {
         assertEquals("Usuario no encontrado: " + invalidUserId, exception.getMessage());
     }
 
-    @Test
-    @DisplayName("Buscar historial por ID de reporte devuelve correctamente la segunda página")
-    void givenMultipleHistories_whenGetHistoryByReportIdPage2_thenReturnsCorrectPagination() {
-        String reportId = testHistories.get(0).getReportId().toHexString();
 
-        PaginatedHistoryResponse response = reportStatusHistoryService.getHistoryByReportId(reportId, 2, 2);
-
-        assertEquals(2, response.page());
-        assertEquals(2, response.size());
-        assertEquals(5, response.totalElements());
-        assertEquals(3, response.totalPages());
-        assertEquals(2, response.content().size());
-    }
+    // ------------------------------------------- GET_HISTORY_BY_OLD_STATUS -------------------------------------------- //
 
 
     @Test
@@ -236,6 +250,9 @@ public class ReportStatusHistoryServiceIntegrationTest {
         assertTrue(response.content().isEmpty());
         assertEquals(0, response.totalElements());
     }
+
+
+    // ------------------------------------------- GET_HISTORY_BY_NEW_STATUS_AND_DATE_RANGE -------------------------------------------- //
 
 
     @Test
@@ -266,6 +283,9 @@ public class ReportStatusHistoryServiceIntegrationTest {
 
         assertTrue(response.content().isEmpty());
     }
+
+
+    // ------------------------------------------- COUNT_BY_REPORT -------------------------------------------- //
 
 
     @Test
