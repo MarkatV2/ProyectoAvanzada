@@ -1,6 +1,8 @@
 package co.edu.uniquindio.proyecto.service.interfaces;
 
 import co.edu.uniquindio.proyecto.dto.notification.NotificationCreateDTO;
+import co.edu.uniquindio.proyecto.entity.comment.Comment;
+import co.edu.uniquindio.proyecto.entity.report.Report;
 
 /**
  * Servicio para enviar notificaciones a los usuarios.
@@ -13,4 +15,5 @@ public interface NotificationService {
      * @param createDTO información de la notificación a enviar.
      */
     void notifyUser(NotificationCreateDTO createDTO);
+
 }

@@ -25,7 +25,7 @@ public interface CategoryRepository extends MongoRepository<Category, ObjectId> 
      * @param objectId Identificador de la categoría.
      * @return Categoría activada si existe, {@link Optional#empty()} si no se encuentra.
      */
-    Optional<Category> findByActivatedTrue(ObjectId objectId);
+    Optional<Category> findByIdAndActivatedTrue(ObjectId objectId);
 
     /**
      * Verifica si existe una categoría con un nombre específico.
