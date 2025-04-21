@@ -69,7 +69,7 @@ class CommentServiceUnitTest {
 
     private List<Comment> comments;
 
-    private ObjectId reportId;
+    private ObjectId reportId;//
     private CommentRequest request;
     private Report reportEntity;
     private Comment commentEntity;
