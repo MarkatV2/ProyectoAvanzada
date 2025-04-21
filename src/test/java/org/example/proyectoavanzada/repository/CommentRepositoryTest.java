@@ -87,7 +87,7 @@ public class CommentRepositoryTest {
 
     @Test
     @DisplayName("Test findByReportId: Debe retornar solo los comentarios publicados para un reporte específico")
-    public void testFindByReportId() {
+    public void testFindAllByReportId() {
         // Se consulta los comentarios del reporte reportId1 usando paginación (página 0, tamaño 10)
         PageRequest pageRequest = PageRequest.of(0, 10);
         Page<Comment> page = commentRepository.findByAllByReportId(reportId1, pageRequest);
