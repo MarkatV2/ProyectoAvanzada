@@ -114,11 +114,19 @@ public class CommentServiceImpl implements CommentService {
         log.info("Obteniendo comentarios para el reporte con ID: {} - Página: {}, Tamaño: {}", reportId, page, size);
 
         ObjectId reportObjectId = parseObjectId(reportId, "ID de reporte inválido: " + reportId);
-
         PageRequest pageable = PageRequest.of(Math.max(page - 1, 0), size);
-        Page<Comment> commentPage = commentRepository.findByAllByReportId(reportObjectId, pageable);
-        List<CommentResponse> responses = commentMapper.toResponseList(commentPage.getContent());
 
+        Page<Comment> commentPage = commentRepository.findByAllByReportId(reportObjectId, pageable);
+
+        // <-- Aquí reincorporamos la excepción cuando no hay comentarios
+        if (commentPage.isEmpty()) {
+            log.warn("No se encontraron comentarios para el reporte con ID: {}", reportId);
+            throw new CommentNotFoundException(
+                    "No se encontraron comentarios para el reporte con ID: " + reportId
+            );
+        }
+
+        List<CommentResponse> responses = commentMapper.toResponseList(commentPage.getContent());
         log.info("Se encontraron {} comentarios para el reporte {} en la página {}",
                 responses.size(), reportId, page);
 
@@ -130,6 +138,7 @@ public class CommentServiceImpl implements CommentService {
                 commentPage.getTotalPages()
         );
     }
+
 
     /**
      * Realiza un borrado lógico de un comentario, marcándolo como ELIMINATED.

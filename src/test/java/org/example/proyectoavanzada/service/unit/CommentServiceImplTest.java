@@ -209,6 +209,7 @@ class CommentServiceImplTest {
         when(securityUtils.getCurrentUserId()).thenReturn("userZ");
         when(securityUtils.getCurrentUsername()).thenReturn("eve");
 
+        // Preparamos la entidad que el mapper creará
         Comment toSave = new Comment();
         toSave.setReportId(new ObjectId(reportIdHex));
         toSave.setUserId(new ObjectId("507f1f77bcf86cd799439012"));
@@ -217,6 +218,7 @@ class CommentServiceImplTest {
         toSave.setCreatedAt(LocalDateTime.now());
         when(commentMapper.toEntity(request, "userZ", "eve")).thenReturn(toSave);
 
+        // Simulamos el guardado y el mapeo a DTO
         Comment saved = new Comment();
         saved.setId(new ObjectId());
         saved.setReportId(toSave.getReportId());
@@ -234,18 +236,29 @@ class CommentServiceImplTest {
                 saved.getComment(),
                 saved.getCreatedAt()
         );
+        when(commentMapper.toResponse(saved)).thenReturn(expected);
 
-        saved.setUserId(new ObjectId(toSave.getUserId()));
+        // Act
+        CommentResponse result = commentService.createComment(request);
 
-        when(commentMapper.toResponse(saved)).thenReturn(new CommentResponse(
-                saved.getId().toHexString(),
-                saved.getUserName(),
-                saved.getUserId(),
-                saved.getReportId().toHexString(),
-                saved.getComment(),
-                saved.getCreatedAt()
-        ));
+        // Assert
+        assertNotNull(result);
+        assertEquals(expected.id(),        result.id());
+        assertEquals(expected.userName(),  result.userName());
+        assertEquals(expected.userId(),    result.userId());
+        assertEquals(expected.reportId(),  result.reportId());
+        assertEquals(expected.comment(),   result.comment());
+        assertEquals(expected.createdAt(), result.createdAt());
+
+        // Verificaciones
+        verify(reportRepository).findById(new ObjectId(reportIdHex));
+        verify(commentMapper).toEntity(request, "userZ", "eve");
+        verify(commentRepository).save(toSave);
+        verify(commentMapper).toResponse(saved);
+        // no interacción con servicio de notificación
+        verifyNoInteractions(commentNotificationService);
     }
+
 
 
     @Test
@@ -392,9 +405,9 @@ class CommentServiceImplTest {
     @Test
     @DisplayName("getCommentsByReportId - flujo negativo: sin comentarios lanza CommentNotFoundException")
     void testGetCommentsByReportId_NotFound() {
-        // Arrange
         int page = 1, size = 5;
-        var pageable = PageRequest.of(page, size);
+        var pageable = PageRequest.of(page - 1, size); // Ajuste al mismo page 0 que usa el código
+
         when(commentRepository.findByAllByReportId(reportId, pageable))
                 .thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
@@ -406,6 +419,8 @@ class CommentServiceImplTest {
         verify(commentRepository, times(1)).findByAllByReportId(reportId, pageable);
         verifyNoInteractions(commentMapper);
     }
+
+
     @Test
     @DisplayName("softDeleteComment - positivo: marca comentario como ELIMINATED y retorna DTO")
     void testSoftDeleteComment_Positive() {
