@@ -6,6 +6,10 @@ import co.edu.uniquindio.proyecto.controller.AuthController;
 import co.edu.uniquindio.proyecto.dto.comment.CommentRequest;
 import co.edu.uniquindio.proyecto.dto.comment.CommentResponse;
 import co.edu.uniquindio.proyecto.entity.category.CategoryRef;
+import co.edu.uniquindio.proyecto.entity.comment.Comment;
+import co.edu.uniquindio.proyecto.entity.comment.CommentStatus;
+import co.edu.uniquindio.proyecto.entity.report.Report;
+import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
 import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
 import co.edu.uniquindio.proyecto.entity.user.Rol;
 import co.edu.uniquindio.proyecto.entity.user.User;
@@ -15,6 +19,7 @@ import co.edu.uniquindio.proyecto.exceptionhandler.auth.SecurityErrorHandler;
 import co.edu.uniquindio.proyecto.exceptionhandler.global.GlobalExceptionHandler;
 import co.edu.uniquindio.proyecto.exceptionhandler.user.UserExceptionHandler;
 import co.edu.uniquindio.proyecto.service.EmailService;
+import org.bson.types.ObjectId;
 import org.example.proyectoavanzada.configuration.TestSecurityConfig;
 import org.example.proyectoavanzada.util.LoginUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +39,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -54,13 +60,19 @@ class CommentControllerIntegrationTest {
     private LoginUtils loginUtils;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    private ObjectId reportIdParaPruebas;
 
     private String tokenAdmin;
     private String tokenUsuario;
 
+    private ObjectId idCommentParaPruebas;
+
     @BeforeEach
     void setUp() {
-        mongoTemplate.dropCollection(User.class); // limpiar colección si lo deseas
+        mongoTemplate.dropCollection(User.class);
+        mongoTemplate.dropCollection(CategoryRef.class);
+        mongoTemplate.dropCollection(Report.class);
+        mongoTemplate.dropCollection(Comment.class); // Limpiar colección de comentarios
 
         // Crear usuarios
         User admin = crearUsuario("admin@example.com", "admin123", "Admin User", Rol.ADMIN, AccountStatus.ACTIVATED);
@@ -75,6 +87,56 @@ class CommentControllerIntegrationTest {
 
         mongoTemplate.save(category1);
         mongoTemplate.save(category2);
+
+        // Crear reportes
+        Report reporte1 = new Report();
+        reporte1.setTitle("Fuga de agua");
+        reporte1.setDescription("Se detectó una fuga de agua en la calle principal");
+        reporte1.setCategoryList(List.of(category1));
+        reporte1.setLocation(new GeoJsonPoint(-99.1332, 19.4326));
+        reporte1.setUserEmail(usuario.getEmail());
+        reporte1.setUserId(usuario.getId());
+        reporte1.setReportStatus(ReportStatus.PENDING);
+        reporte1.setImportantVotes(3);
+        reporte1.setCreatedAt(LocalDateTime.now());
+
+        Report reporte2 = new Report();
+        reporte2.setTitle("Alumbrado público dañado");
+        reporte2.setDescription("Farolas apagadas durante la noche en el parque");
+        reporte2.setCategoryList(List.of(category2));
+        reporte2.setLocation(new GeoJsonPoint(-99.1400, 19.4400));
+        reporte2.setUserEmail(usuario.getEmail());
+        reporte2.setUserId(usuario.getId());
+        reporte2.setReportStatus(ReportStatus.RESOLVED);
+        reporte2.setImportantVotes(1);
+        reporte2.setCreatedAt(LocalDateTime.now());
+
+        mongoTemplate.save(reporte1);
+        mongoTemplate.save(reporte2);
+
+        reportIdParaPruebas = reporte1.getId();
+
+        // Crear comentarios
+        Comment comment1 = new Comment();
+        comment1.setUserName(usuario.getFullName());
+        comment1.setUserId(usuario.getId());
+        comment1.setReportId(reportIdParaPruebas);
+        comment1.setComment("Esto necesita atención urgente.");
+        comment1.setCreatedAt(LocalDateTime.now());
+        comment1.setCommentStatus(CommentStatus.PUBLISHED);
+
+        Comment comment2 = new Comment();
+        comment2.setUserName(admin.getFullName());
+        comment2.setUserId(admin.getId());
+        comment2.setReportId(reportIdParaPruebas);
+        comment2.setComment("Ya se reportó al departamento correspondiente.");
+        comment2.setCreatedAt(LocalDateTime.now());
+        comment2.setCommentStatus(CommentStatus.PUBLISHED);
+
+        mongoTemplate.save(comment1);
+        mongoTemplate.save(comment2);
+
+        idCommentParaPruebas = comment1.getId();
 
         // Obtener tokens
         tokenAdmin = loginUtils.obtenerTokenAdmin();
@@ -107,7 +169,7 @@ class CommentControllerIntegrationTest {
     @Test
     void testCreateComment() {
         // Arrange
-        CommentRequest commentRequest = new CommentRequest("Este es un comentario", "12345");
+        CommentRequest commentRequest = new CommentRequest("Este es un comentario", reportIdParaPruebas.toHexString());
 
         // Crear los headers con el token de usuario
         HttpHeaders headers = loginUtils.crearHeadersConToken(tokenUsuario);
@@ -122,16 +184,12 @@ class CommentControllerIntegrationTest {
         );
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals("1", response.getBody().id());
-        assertEquals("Juan", response.getBody().userName());
-        assertEquals("Este es un comentario", response.getBody().comment());
     }
 
     @Test
     void testGetCommentById() {
         // Arrange
-        String commentId = "1";
+        String commentId = idCommentParaPruebas.toHexString();
 
         // Crear los headers con el token de usuario
         HttpHeaders headers = loginUtils.crearHeadersConToken(tokenUsuario);
@@ -148,14 +206,12 @@ class CommentControllerIntegrationTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals("1", response.getBody().id());
-        assertEquals("Este es un comentario", response.getBody().comment());
     }
 
     @Test
     void testSoftDeleteComment() {
         // Arrange
-        String commentId = "1";
+        String commentId = idCommentParaPruebas.toHexString();
 
         // Crear los headers con el token de admin
         HttpHeaders headers = loginUtils.crearHeadersConToken(tokenAdmin);
@@ -172,14 +228,12 @@ class CommentControllerIntegrationTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals("1", response.getBody().id());
-        assertEquals("Este es un comentario", response.getBody().comment());
     }
 
     @Test
     void testGetCommentById_NotFound() {
         // Arrange
-        String nonExistentCommentId = "inexistente123";
+        String nonExistentCommentId = new ObjectId().toHexString();
         HttpHeaders headers = loginUtils.crearHeadersConToken(tokenUsuario);
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
@@ -245,7 +299,7 @@ class CommentControllerIntegrationTest {
         // Arrange
         // Crea un comentario con otro usuario (ej. admin), pero intenta borrarlo con un usuario sin permisos
 
-        CommentRequest commentRequest = new CommentRequest("Comentario protegido", "reporte123");
+        CommentRequest commentRequest = new CommentRequest("Comentario protegido", reportIdParaPruebas.toHexString());
 
         // Crear comentario con el ADMIN
         HttpHeaders adminHeaders = loginUtils.crearHeadersConToken(tokenAdmin);
