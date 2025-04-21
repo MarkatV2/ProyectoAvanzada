@@ -12,6 +12,7 @@ import co.edu.uniquindio.proyecto.exception.report.ReportNotFoundException;
 import co.edu.uniquindio.proyecto.repository.CommentRepository;
 import co.edu.uniquindio.proyecto.repository.ReportRepository;
 import co.edu.uniquindio.proyecto.service.EmailService;
+import co.edu.uniquindio.proyecto.service.implementations.CommentNotificationService;
 import co.edu.uniquindio.proyecto.service.implementations.CommentServiceImpl;
 import co.edu.uniquindio.proyecto.service.interfaces.NotificationService;
 import co.edu.uniquindio.proyecto.service.mapper.CommentMapper;
@@ -55,7 +56,7 @@ class CommentServiceUnitTest {
     private EmailService emailService;
 
     @Mock
-    private NotificationService commentNotificationService;
+    private CommentNotificationService commentNotificationService;
 
     @Mock
     private SecurityUtils securityUtils;
@@ -79,7 +80,7 @@ class CommentServiceUnitTest {
     @BeforeEach
     void setUp() {
         // Creamos IDs de ejemplo
-        String reportId = new ObjectId().toHexString();
+        reportId = new ObjectId();
         String userId    = new ObjectId().toHexString();
         String userName  = "juan.perez";
         String commentId = new ObjectId().toHexString();
@@ -87,19 +88,19 @@ class CommentServiceUnitTest {
         // 1) El request que llega al método
         request = new CommentRequest(
                 "Este es un comentario de prueba",
-                reportId
+                reportId.toHexString()
         );
 
         // 2) El Report que devuelve el repo
         reportEntity = new Report();
-        reportEntity.setId(new ObjectId(reportId));
+        reportEntity.setId(new ObjectId(reportId.toHexString()));
         reportEntity.setTitle("Incidente X");
         // … otros campos del report si los necesitas
 
         // 3) La entidad Comment que devuelve el mapper antes de guardar
         commentEntity = new Comment();
         commentEntity.setId(new ObjectId(commentId)); // aunque normalmente se genera al guardar
-        commentEntity.setReportId(new ObjectId(reportId));
+        commentEntity.setReportId(new ObjectId(reportId.toHexString()));
         commentEntity.setComment(request.comment());
         commentEntity.setUserId(new ObjectId(userId));
         commentEntity.setUserName(userName);
@@ -113,12 +114,11 @@ class CommentServiceUnitTest {
                 commentId,
                 userName,
                 userId,
-                reportId,
+                reportId.toHexString(),
                 request.comment(),
                 savedComment.getCreatedAt()
         );
-        reportId = new ObjectId().toHexString();
-        String finalReportId = reportId;
+        String finalReportId = reportId.toHexString();
         comments = IntStream.rangeClosed(1, 5)
                 .mapToObj(i -> {
                     Comment c = new Comment();
@@ -172,44 +172,77 @@ class CommentServiceUnitTest {
         return comment;
     }
 
+
     @Test
-    @DisplayName("Crear comentario - éxito")
-    void shouldCreateCommentSuccessfully() {
+    @DisplayName("createComment - flujo positivo: crea comentario y notifica al dueño del reporte")
+    void testCreateComment_PositiveFlow() {
         // Arrange
-        // 1) Report existe
-        when(reportRepository.findById(new ObjectId(request.reportId())))
-                .thenReturn(Optional.of(reportEntity));
-        // 2) Usuario autenticado
-        when(securityUtils.getCurrentUserId()).thenReturn(expectedResponse.userId());
-        when(securityUtils.getCurrentUsername()).thenReturn(expectedResponse.userName());
-        // 3) Mapper convierte request a entidad
-        when(commentMapper.toEntity(request, expectedResponse.userId(), expectedResponse.userName()))
-                .thenReturn(commentEntity);
-        // 4) Repo guarda y devuelve la entidad
-        when(commentRepository.save(commentEntity))
-                .thenReturn(savedComment);
-        // 5) Mapper convierte entidad guardada a response
-        when(commentMapper.toResponse(savedComment))
-                .thenReturn(expectedResponse);
-        // 6) Evitar llamada real a notifyOwner
-        doNothing().when(commentNotificationService).notifyUser(any());
+        Report mockReport = new Report();
+        ObjectId reportId = new ObjectId("507f1f77bcf86cd799439011");
+        mockReport.setId(reportId);
+
+        String reportIdHex = reportId.toHexString();
+        String userId = "507f1f77bcf86cd799439012";
+        String username = "eve";
+
+        CommentRequest request = new CommentRequest("Comentario de prueba", reportIdHex);
+
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(mockReport));
+        when(securityUtils.getCurrentUserId()).thenReturn(userId);
+        when(securityUtils.getCurrentUsername()).thenReturn(username);
+
+        Comment toSave = new Comment();
+        toSave.setReportId(reportId);
+        toSave.setUserId(new ObjectId(userId));
+        toSave.setUserName(username);
+        toSave.setComment(request.comment());
+        toSave.setCreatedAt(LocalDateTime.now());
+
+        when(commentMapper.toEntity(request, userId, username)).thenReturn(toSave);
+
+        Comment savedComment = new Comment();
+        ObjectId savedId = new ObjectId("507f1f77bcf86cd799439013");
+        savedComment.setId(savedId);
+        savedComment.setReportId(toSave.getReportId());
+        savedComment.setUserId(new ObjectId(toSave.getUserId()));
+        savedComment.setUserName(toSave.getUserName());
+        savedComment.setComment(toSave.getComment());
+        savedComment.setCreatedAt(toSave.getCreatedAt());
+
+        when(commentRepository.save(toSave)).thenReturn(savedComment);
+
+        CommentResponse expectedResponse = new CommentResponse(
+                savedId.toHexString(),
+                username,
+                userId,
+                reportIdHex,
+                request.comment(),
+                savedComment.getCreatedAt()
+        );
+
+        when(commentMapper.toResponse(savedComment)).thenReturn(expectedResponse);
 
         // Act
-        CommentResponse actual = commentService.createComment(request);
+        CommentResponse actualResponse = commentService.createComment(request);
 
         // Assert
-        assertThat(actual).isEqualTo(expectedResponse);
+        assertNotNull(actualResponse);
+        assertEquals(expectedResponse.id(), actualResponse.id());
+        assertEquals(expectedResponse.userName(), actualResponse.userName());
+        assertEquals(expectedResponse.userId(), actualResponse.userId());
+        assertEquals(expectedResponse.reportId(), actualResponse.reportId());
+        assertEquals(expectedResponse.comment(), actualResponse.comment());
+        assertEquals(expectedResponse.createdAt(), actualResponse.createdAt());
 
-        // Verificaciones de interacción en orden
-        InOrder inOrder = inOrder(reportRepository, securityUtils, commentMapper, commentRepository, commentNotificationService);
-        inOrder.verify(reportRepository).findById(new ObjectId(request.reportId()));
-        inOrder.verify(securityUtils).getCurrentUserId();
-        inOrder.verify(securityUtils).getCurrentUsername();
-        inOrder.verify(commentMapper).toEntity(request, expectedResponse.userId(), expectedResponse.userName());
-        inOrder.verify(commentRepository).save(commentEntity);
-        inOrder.verify(commentMapper).toResponse(savedComment);
-        inOrder.verifyNoMoreInteractions();
+        verify(reportRepository).findById(reportId);
+        verify(securityUtils).getCurrentUserId();
+        verify(securityUtils).getCurrentUsername();
+        verify(commentMapper).toEntity(request, userId, username);
+        verify(commentRepository).save(toSave);
+        verify(commentMapper).toResponse(savedComment);
     }
+
+
 
 
     @Test
@@ -232,56 +265,7 @@ class CommentServiceUnitTest {
     }
 
 
-    @Test
-    @DisplayName("createComment - positivo: crea comentario sin verificar notificación")
-    void testCreateComment_NoNotificationCheck() {
-        // Arrange
-        Report targetReport = reports.get(0);
-        String reportIdHex = targetReport.getId().toHexString();
-        CommentRequest request = new CommentRequest("Texto sin notificación", reportIdHex);
 
-        when(reportRepository.findById(new ObjectId(reportIdHex)))
-                .thenReturn(Optional.of(targetReport));
-        when(securityUtils.getCurrentUserId()).thenReturn("userZ");
-        when(securityUtils.getCurrentUsername()).thenReturn("eve");
-
-        Comment toSave = new Comment();
-        toSave.setReportId(new ObjectId(reportIdHex));
-        toSave.setUserId(new ObjectId("507f1f77bcf86cd799439012"));
-        toSave.setUserName("eve");
-        toSave.setComment(request.comment());
-        toSave.setCreatedAt(LocalDateTime.now());
-        when(commentMapper.toEntity(request, "userZ", "eve")).thenReturn(toSave);
-
-        Comment saved = new Comment();
-        saved.setId(new ObjectId());
-        saved.setReportId(toSave.getReportId());
-        saved.setUserId(new ObjectId(toSave.getUserId()));
-        saved.setUserName(toSave.getUserName());
-        saved.setComment(toSave.getComment());
-        saved.setCreatedAt(toSave.getCreatedAt());
-        when(commentRepository.save(toSave)).thenReturn(saved);
-
-        CommentResponse expected = new CommentResponse(
-                saved.getId().toHexString(),
-                saved.getUserName(),
-                saved.getUserId(),
-                saved.getReportId().toHexString(),
-                saved.getComment(),
-                saved.getCreatedAt()
-        );
-
-        saved.setUserId(new ObjectId(toSave.getUserId()));
-
-        when(commentMapper.toResponse(saved)).thenReturn(new CommentResponse(
-                saved.getId().toHexString(),
-                saved.getUserName(),
-                saved.getUserId(),
-                saved.getReportId().toHexString(),
-                saved.getComment(),
-                saved.getCreatedAt()
-        ));
-    }
 
 
     @Test

@@ -1,185 +1,280 @@
 package org.example.proyectoavanzada.controller.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.IntStream;
-
-import org.bson.types.ObjectId;
+import co.edu.uniquindio.proyecto.ProyectoApplication;
+import co.edu.uniquindio.proyecto.configuration.SecurityConfig;
+import co.edu.uniquindio.proyecto.controller.AuthController;
+import co.edu.uniquindio.proyecto.dto.comment.CommentRequest;
+import co.edu.uniquindio.proyecto.dto.comment.CommentResponse;
+import co.edu.uniquindio.proyecto.entity.category.CategoryRef;
+import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
+import co.edu.uniquindio.proyecto.entity.user.Rol;
+import co.edu.uniquindio.proyecto.entity.user.User;
+import co.edu.uniquindio.proyecto.exceptionhandler.ErrorResponseBuilder;
+import co.edu.uniquindio.proyecto.exceptionhandler.auth.AuthExceptionHandler;
+import co.edu.uniquindio.proyecto.exceptionhandler.auth.SecurityErrorHandler;
+import co.edu.uniquindio.proyecto.exceptionhandler.global.GlobalExceptionHandler;
+import co.edu.uniquindio.proyecto.exceptionhandler.user.UserExceptionHandler;
+import co.edu.uniquindio.proyecto.service.EmailService;
+import org.example.proyectoavanzada.configuration.TestSecurityConfig;
 import org.example.proyectoavanzada.util.LoginUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import co.edu.uniquindio.proyecto.ProyectoApplication;
-import co.edu.uniquindio.proyecto.configuration.SecurityConfig;
-import co.edu.uniquindio.proyecto.dto.comment.CommentRequest;
-import co.edu.uniquindio.proyecto.dto.comment.CommentResponse;
-import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
-import co.edu.uniquindio.proyecto.dto.image.ImageUploadRequest;
-import co.edu.uniquindio.proyecto.entity.comment.Comment;
-import co.edu.uniquindio.proyecto.entity.comment.CommentStatus;
-import co.edu.uniquindio.proyecto.entity.image.Image;
-import co.edu.uniquindio.proyecto.entity.report.Report;
-import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
-import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
-import co.edu.uniquindio.proyecto.entity.user.Rol;
-import co.edu.uniquindio.proyecto.entity.user.User;
-import co.edu.uniquindio.proyecto.service.EmailService;
-import co.edu.uniquindio.proyecto.service.interfaces.ImageService;
+import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Integration tests for the CommentController.
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@ContextConfiguration(classes = { ProyectoApplication.class, LoginUtils.class, SecurityConfig.class })
+@ContextConfiguration(classes = {ProyectoApplication.class, LoginUtils.class, SecurityConfig.class})
+@Import({SecurityErrorHandler.class})
 class CommentControllerIntegrationTest {
 
-  @Autowired
-  private MongoTemplate mongoTemplate;
-  @Autowired
-  private TestRestTemplate restTemplate;
-  @Autowired
-  private ObjectMapper objectMapper;
-  @Autowired
-  private ImageService imageService;
-  @MockitoBean
-  private EmailService emailService;
-  @Autowired
-  private PasswordEncoder passwordEncoder;
-  @Autowired
-  private LoginUtils loginUtils;
-  private List<Comment> testComments;
+    @Autowired
+    private TestRestTemplate restTemplate;
 
-  @BeforeEach
-  void setUp() {
-    mongoTemplate.getDb().drop();
-    mongoTemplate.dropCollection(Comment.class);
+    @MockitoBean
+    private EmailService emailService;
+    @Autowired
+    private MongoTemplate mongoTemplate;
+    @Autowired
+    private LoginUtils loginUtils;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    // Crear usuario normal
-    User user = new User();
-    user.setId(new ObjectId());
-    user.setEmail("user@example.com");
-    user.setPassword(passwordEncoder.encode("user123"));
-    user.setRol(Rol.USER);
-    user.setAccountStatus(AccountStatus.ACTIVATED);
-    mongoTemplate.insert(user);
+    private String tokenAdmin;
+    private String tokenUsuario;
 
-    // Inserta 8 reportes con ubicaciones alrededor de (75,4)
-    List<Report> reportList = IntStream.rangeClosed(0, 5)
-        .mapToObj(i -> {
-          double lon = 75 + (i % 2 == 0 ? 0.005 * i : -0.003 * i);
-          double lat = 4 + (i % 3 == 0 ? 0.007 * i : -0.004 * i);
-          Report r = new Report();
-          r.setId(new ObjectId());
-          r.setTitle("Reporte " + i);
-          r.setDescription("Descripción " + i);
-          r.setLocation(new GeoJsonPoint(lon, lat));
-          r.setUserId(user.getId());
-          r.setUserEmail("user" + i + "@example.com");
-          r.setReportStatus(ReportStatus.VERIFIED);
-          r.setImportantVotes(i);
-          r.setCreatedAt(LocalDateTime.now().minusDays(i));
-          return r;
-        })
-        .toList();
+    @BeforeEach
+    void setUp() {
+        mongoTemplate.dropCollection(User.class); // limpiar colección si lo deseas
 
-    mongoTemplate.insertAll(reportList);
-    testComments = IntStream.range(0, 5)
-        .mapToObj(i -> {
-          Comment image = new Comment();
-          image.setId(new ObjectId());
-          image.setReportId(reportList.get(i).getId());
-          image.setUserId(user.getId());
-          image.setUserName("user123");
-          image.setComment("comment" + i);
-          image.setCommentStatus(CommentStatus.PUBLISHED);
-          return image;
-        }).toList();
+        // Crear usuarios
+        User admin = crearUsuario("admin@example.com", "admin123", "Admin User", Rol.ADMIN, AccountStatus.ACTIVATED);
+        User usuario = crearUsuario("user@example.com", "user123", "Regular User", Rol.USER, AccountStatus.ACTIVATED);
 
-    mongoTemplate.insertAll(testComments);
+        mongoTemplate.save(admin);
+        mongoTemplate.save(usuario);
+
+        // Crear categorías
+        CategoryRef category1 = new CategoryRef("Category1");
+        CategoryRef category2 = new CategoryRef("Category2");
+
+        mongoTemplate.save(category1);
+        mongoTemplate.save(category2);
+
+        // Obtener tokens
+        tokenAdmin = loginUtils.obtenerTokenAdmin();
+        tokenUsuario = loginUtils.obtenerTokenUsuario();
+    }
 
 
-  }
+    private User crearUsuario(
+            String email,
+            String passwordPlano,
+            String nombreCompleto,
+            Rol rol,
+            AccountStatus estado
+    ) {
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(passwordPlano));
+        user.setFullName(nombreCompleto);
+        user.setDateBirth(LocalDateTime.of(1990, 1, 1, 0, 0));
+        user.setCreatedAt(LocalDateTime.now());
+        user.setRol(rol);
+        user.setAccountStatus(estado);
+        user.setCityOfResidence("CiudadX");
+        user.setNotificationRadiusKm(5.0);
+        // Opcional: no seteamos la ubicación aquí
+        return user;
+    }
 
-  @Test
-  void testRegisterCommentIntegration() {
-    CommentRequest commentRequest = new CommentRequest(
-        "Comment6",
-        testComments.get(0).getReportId().toHexString());
-    HttpEntity<CommentRequest> request = generateHeader(
-        commentRequest);
 
-    // ACT: Send POST request to register a new comment
-    ResponseEntity<CommentResponse> response = restTemplate.postForEntity("/api/v1/comments", request,
-        CommentResponse.class);
+    @Test
+    void testCreateComment() {
+        // Arrange
+        CommentRequest commentRequest = new CommentRequest("Este es un comentario", "12345");
 
-    assertEquals(HttpStatus.CREATED, response.getStatusCode());
-    assertNotNull(response.getBody());
-    List<Comment> comments = mongoTemplate.findAll(Comment.class);
-    assertEquals(6, comments.size());
-  }
+        // Crear los headers con el token de usuario
+        HttpHeaders headers = loginUtils.crearHeadersConToken(tokenUsuario);
+        HttpEntity<CommentRequest> requestEntity = new HttpEntity<>(commentRequest, headers);
 
-  private <T> HttpEntity<T> generateHeader(T imageUploadRequest) {
-    String token = loginUtils.obtenerTokenUsuario();
-    HttpHeaders headers = loginUtils.crearHeadersConToken(token);
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    return new HttpEntity<>(imageUploadRequest, headers);
-  }
+        // Act & Assert
+        ResponseEntity<CommentResponse> response = restTemplate.exchange(
+                "/api/v1/comments",
+                HttpMethod.POST,
+                requestEntity,
+                CommentResponse.class
+        );
 
-  @Test
-  void testGetCommentByIdIntegration() throws Exception {
-    // ARRANGE: Persist a test comment in the database
-    String token = loginUtils.obtenerTokenUsuario();
-    HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("1", response.getBody().id());
+        assertEquals("Juan", response.getBody().userName());
+        assertEquals("Este es un comentario", response.getBody().comment());
+    }
 
-    HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+    @Test
+    void testGetCommentById() {
+        // Arrange
+        String commentId = "1";
 
-    // ACT
-    ResponseEntity<CommentResponse> response = restTemplate.exchange(
-        "/api/v1/comments/" + testComments.get(0).getId().toHexString(),
-        HttpMethod.GET, httpEntity,
-        CommentResponse.class);
+        // Crear los headers con el token de usuario
+        HttpHeaders headers = loginUtils.crearHeadersConToken(tokenUsuario);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(testComments.get(0).getId().toString(), response.getBody().id().toString());
-    assertEquals(testComments.get(0).getComment(), response.getBody().comment());
-  }
+        // Act & Assert
+        ResponseEntity<CommentResponse> response = restTemplate.exchange(
+                "/api/v1/comments/{commentId}",
+                HttpMethod.GET,
+                requestEntity,
+                CommentResponse.class,
+                commentId
+        );
 
-  @Test
-  void testDeactivateCommentIntegration() throws Exception {
-    // ARRANGE: Persist a test image in the database
-    String token = loginUtils.obtenerTokenUsuario();
-    HttpHeaders headers = loginUtils.crearHeadersConToken(token);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("1", response.getBody().id());
+        assertEquals("Este es un comentario", response.getBody().comment());
+    }
 
-    HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
+    @Test
+    void testSoftDeleteComment() {
+        // Arrange
+        String commentId = "1";
 
-    ResponseEntity<CommentResponse> response = restTemplate.exchange("/api/v1/comments/" + testComments.get(0).getId().toHexString(),
-        HttpMethod.DELETE, httpEntity,
-        CommentResponse.class);
+        // Crear los headers con el token de admin
+        HttpHeaders headers = loginUtils.crearHeadersConToken(tokenAdmin);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    List<Comment> comments = mongoTemplate.findAll(Comment.class);
-    assertEquals(5, comments.size());
-    assertEquals(CommentStatus.ELIMINATED, comments.get(0).getCommentStatus());
-  }
+        // Act & Assert
+        ResponseEntity<CommentResponse> response = restTemplate.exchange(
+                "/api/v1/comments/{commentId}",
+                HttpMethod.DELETE,
+                requestEntity,
+                CommentResponse.class,
+                commentId
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("1", response.getBody().id());
+        assertEquals("Este es un comentario", response.getBody().comment());
+    }
+
+    @Test
+    void testGetCommentById_NotFound() {
+        // Arrange
+        String nonExistentCommentId = "inexistente123";
+        HttpHeaders headers = loginUtils.crearHeadersConToken(tokenUsuario);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/comments/{commentId}",
+                HttpMethod.GET,
+                requestEntity,
+                String.class,
+                nonExistentCommentId
+        );
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+
+    @Test
+    void testCreateComment_ExceedingLength() {
+        // Arrange
+        String longComment = "a".repeat(801);
+        CommentRequest request = new CommentRequest(longComment, "report123");
+
+        HttpHeaders headers = loginUtils.crearHeadersConToken(tokenUsuario);
+        HttpEntity<CommentRequest> requestEntity = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/comments",
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+
+    @Test
+    void testCreateComment_InvalidReportId() {
+        // Arrange
+        CommentRequest request = new CommentRequest("Comentario válido", ""); // reportId vacío
+
+        HttpHeaders headers = loginUtils.crearHeadersConToken(tokenUsuario);
+        HttpEntity<CommentRequest> requestEntity = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/comments",
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+
+    @Test
+    void testSoftDeleteComment_NotOwnerOrAdmin() {
+        // Arrange
+        // Crea un comentario con otro usuario (ej. admin), pero intenta borrarlo con un usuario sin permisos
+
+        CommentRequest commentRequest = new CommentRequest("Comentario protegido", "reporte123");
+
+        // Crear comentario con el ADMIN
+        HttpHeaders adminHeaders = loginUtils.crearHeadersConToken(tokenAdmin);
+        HttpEntity<CommentRequest> requestEntity = new HttpEntity<>(commentRequest, adminHeaders);
+
+        ResponseEntity<CommentResponse> createResponse = restTemplate.exchange(
+                "/api/v1/comments",
+                HttpMethod.POST,
+                requestEntity,
+                CommentResponse.class
+        );
+
+        String commentId = createResponse.getBody().id();
+
+        // Act: intentar borrar con un USUARIO que no es dueño
+        HttpHeaders userHeaders = loginUtils.crearHeadersConToken(tokenUsuario);
+        HttpEntity<Void> deleteRequest = new HttpEntity<>(userHeaders);
+
+        ResponseEntity<String> deleteResponse = restTemplate.exchange(
+                "/api/v1/comments/{commentId}",
+                HttpMethod.DELETE,
+                deleteRequest,
+                String.class,
+                commentId
+        );
+
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, deleteResponse.getStatusCode());
+    }
+
+
 }

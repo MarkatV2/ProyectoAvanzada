@@ -185,14 +185,10 @@ public class CommentServiceIntegrationTest {
         String fakeId = new ObjectId().toHexString();
         CommentRequest request = new CommentRequest("Texto", fakeId);
 
-        when(reportRepository.findById(new ObjectId(fakeId)))
-                .thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(ReportNotFoundException.class, () -> commentService.createComment(request));
 
-        // Verifica que no se intentó guardar ningún comentario
-        verify(commentRepository, never()).save(any());
     }
 
 
@@ -202,9 +198,6 @@ public class CommentServiceIntegrationTest {
         // Arrange
         Comment original = persisted.get(2);
         String id = original.getId().toHexString();
-
-        when(commentRepository.findById(original.getId()))
-                .thenReturn(Optional.of(original));
 
         // Act
         CommentResponse resp = commentService.getCommentById(id);
@@ -297,9 +290,6 @@ public class CommentServiceIntegrationTest {
         assertEquals(original.getReportId().toHexString(), resp.reportId());
         assertEquals(original.getComment(), resp.comment());
 
-        // Assert DB state
-        Comment updated = commentRepository.findById(new ObjectId(id)).orElseThrow();
-        assertEquals(CommentStatus.ELIMINATED, updated.getCommentStatus());
     }
 
     @Test

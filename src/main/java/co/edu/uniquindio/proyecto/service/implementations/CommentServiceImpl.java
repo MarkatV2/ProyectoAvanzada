@@ -118,14 +118,6 @@ public class CommentServiceImpl implements CommentService {
 
         Page<Comment> commentPage = commentRepository.findByAllByReportId(reportObjectId, pageable);
 
-        // <-- Aquí reincorporamos la excepción cuando no hay comentarios
-        if (commentPage.isEmpty()) {
-            log.warn("No se encontraron comentarios para el reporte con ID: {}", reportId);
-            throw new CommentNotFoundException(
-                    "No se encontraron comentarios para el reporte con ID: " + reportId
-            );
-        }
-
         List<CommentResponse> responses = commentMapper.toResponseList(commentPage.getContent());
         log.info("Se encontraron {} comentarios para el reporte {} en la página {}",
                 responses.size(), reportId, page);
