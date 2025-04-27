@@ -45,16 +45,11 @@ public class JwtTokenFromCookieFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
         Optional<String> accessToken = getAccessTokenFromCookies(request);
 
         if (accessToken.isPresent()) {
             log.info("Accediendo a la solicitud con token de acceso desde la cookie");
-
-            // Crear un Bearer token en el formato esperado por Spring Security
             String bearerToken = "Bearer " + accessToken.get();
-
-            // Establecer el token de acceso en el contexto de seguridad
             request = new RequestWrapper(request, bearerToken);
         } else {
             log.warn("No se encontró token de acceso en las cookies.");
@@ -63,6 +58,16 @@ public class JwtTokenFromCookieFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        return ("/api/v1/users".equals(path) && "POST".equalsIgnoreCase(method)) ||
+               path.startsWith("/api/v1/auth/") ||
+               path.startsWith("/swagger-ui/") ||
+               path.startsWith("/v3/api-docs/");
+    }
 
     /**
      * Método que obtiene el token de acceso desde las cookies de la solicitud.
