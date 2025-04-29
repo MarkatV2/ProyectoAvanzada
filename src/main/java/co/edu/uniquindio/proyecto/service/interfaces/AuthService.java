@@ -1,9 +1,12 @@
 package co.edu.uniquindio.proyecto.service.interfaces;
 
 
+import org.springframework.http.ResponseEntity;
+
 import co.edu.uniquindio.proyecto.dto.user.JwtAccessResponse;
 import co.edu.uniquindio.proyecto.dto.user.JwtResponse;
 import co.edu.uniquindio.proyecto.dto.user.LoginRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Servicio responsable de autenticar usuarios y generar JWT.
@@ -19,5 +22,6 @@ public interface AuthService {
     JwtResponse authenticate(LoginRequest request);
 
     JwtAccessResponse refreshAccessToken(String refreshToken);
-}
 
+    boolean logout(HttpServletRequest request);
+}

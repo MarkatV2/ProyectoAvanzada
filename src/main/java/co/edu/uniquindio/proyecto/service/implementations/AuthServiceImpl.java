@@ -10,8 +10,8 @@ import co.edu.uniquindio.proyecto.exception.user.UserNotFoundException;
 import co.edu.uniquindio.proyecto.repository.UserRepository;
 import co.edu.uniquindio.proyecto.service.interfaces.AuthService;
 import co.edu.uniquindio.proyecto.util.JwtUtils;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -106,6 +106,15 @@ public class AuthServiceImpl implements AuthService {
         return new JwtAccessResponse(newAccessToken);
     }
 
+    @Override
+    public boolean logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false); // Get the current session, if it exists
+        if (session != null) {
+            session.invalidate(); // Invalidate the session
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Valida que los campos del request no sean nulos o vacíos.
