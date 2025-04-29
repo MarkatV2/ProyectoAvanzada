@@ -49,7 +49,7 @@ public class JwtTokenFromCookieFilter extends OncePerRequestFilter {
 
         if (accessToken.isPresent()) {
             log.info("Accediendo a la solicitud con token de acceso desde la cookie");
-            String bearerToken = "Bearer " + accessToken.get();
+            String bearerToken = accessToken.get();
             request = new RequestWrapper(request, bearerToken);
         } else {
             log.warn("No se encontró token de acceso en las cookies.");
