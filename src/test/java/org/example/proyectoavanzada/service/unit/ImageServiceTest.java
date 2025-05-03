@@ -73,8 +73,7 @@ class ImageServiceTest {
 
         uploadRequest = new ImageUploadRequest(
                 image.getImageUrl(),
-                image.getReportId().toString(),
-                image.getUserId().toString()
+                image.getReportId().toString()
         );
     }
 
@@ -115,7 +114,7 @@ class ImageServiceTest {
     @DisplayName("✅ Registrar imagen - Éxito")
     void testRegisterImage_Success() {
         // Arrange
-        when(imageMapper.toImage(uploadRequest)).thenReturn(image);
+        when(imageMapper.toImage(eq(uploadRequest), any())).thenReturn(image);
         when(imageRepository.save(image)).thenReturn(image);
         when(imageMapper.toImageResponse(image)).thenReturn(imageResponse);
 
@@ -124,7 +123,7 @@ class ImageServiceTest {
 
         // Assert
         assertEquals(imageResponse, result);
-        verify(imageMapper).toImage(uploadRequest);
+        verify(imageMapper).toImage(eq(uploadRequest), any());
         verify(imageRepository).save(image);
         verify(imageMapper).toImageResponse(image);
     }
@@ -135,8 +134,7 @@ class ImageServiceTest {
         // Arrange
         ImageUploadRequest invalidRequest = new ImageUploadRequest(
                 "http://example.com/image.jpg",
-                reportId.toString(),
-                new ObjectId().toString()
+                reportId.toString()
         );
 
         // Act & Assert

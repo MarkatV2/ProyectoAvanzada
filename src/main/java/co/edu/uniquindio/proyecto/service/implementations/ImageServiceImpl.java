@@ -11,6 +11,7 @@ import co.edu.uniquindio.proyecto.repository.ImageRepository;
 import co.edu.uniquindio.proyecto.repository.ReportRepository;
 import co.edu.uniquindio.proyecto.service.interfaces.ImageService;
 import co.edu.uniquindio.proyecto.service.mapper.ImageMapper;
+import co.edu.uniquindio.proyecto.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -34,6 +35,8 @@ public class ImageServiceImpl implements ImageService {
     private final ImageRepository imageRepository;
     private final ReportRepository reportRepository;
     private final ImageMapper imageMapper;
+    private final SecurityUtils securityUtils;
+
 
     /**
      * Recupera la información de una imagen a partir de su ID.
@@ -66,8 +69,9 @@ public class ImageServiceImpl implements ImageService {
     @Override
     public ImageResponse registerImage(ImageUploadRequest request) {
         log.info("Verificando URL de imagen: {}", request.imageUrl());
+
         validateCloudinaryUrl(request.imageUrl());
-        Image image = imageMapper.toImage(request);
+        Image image = imageMapper.toImage(request, securityUtils.getCurrentUserId());
         Image savedImage = imageRepository.save(image);
         log.info("Imagen registrada exitosamente con ID: {}", savedImage.getId());
         return imageMapper.toImageResponse(savedImage);
@@ -101,7 +105,7 @@ public class ImageServiceImpl implements ImageService {
      * @throws InvalidImageException Si el formato de la URL es inválido.
      */
     private void validateCloudinaryUrl(String url) {
-        if (!url.matches("^https://res.cloudinary.com/.*/(image|video)/upload/.*")) {
+        if (!url.matches("^http://res.cloudinary.com/.*/(image|video)/upload/.*")) {
             log.error("URL no válida: {}", url);
             throw new InvalidImageException("Formato de URL de Cloudinary inválido");
         }
