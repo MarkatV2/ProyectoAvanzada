@@ -18,6 +18,7 @@ public interface ImageMapper {
 
     @Mapping(target = "id", source = "id", qualifiedByName = "objectIdToString")
     @Mapping(target = "uploadDate", dateFormat = "yyyy-MM-dd'T'HH:mm:ss")
+    @Mapping(target = "reportId", source = "reportId", qualifiedByName = "objectIdToString")
     ImageResponse toImageResponse(Image image);
 
     @Mapping(target = "id", ignore = true)

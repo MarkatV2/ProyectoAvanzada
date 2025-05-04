@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public record ImageResponse(
         String id,
         String imageUrl,
+        String reportId,
         LocalDateTime uploadDate
 ) {
 }
