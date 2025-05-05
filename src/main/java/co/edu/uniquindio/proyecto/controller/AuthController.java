@@ -95,7 +95,7 @@ public class AuthController {
   }
 
 
-  @PostMapping("/users/password/{email}")
+  @PostMapping("/users/password-codes/{email}")
   public ResponseEntity<Void> resendPasswordResetCode(@PathVariable String email) {
     log.info("📩 Reenviando código de activación al usuario con ID: {}", email);
     verificationService.resendCode(email, VerificationCodeType.PASSWORD_RESET);
