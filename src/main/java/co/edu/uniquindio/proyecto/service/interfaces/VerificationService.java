@@ -26,10 +26,10 @@ public interface VerificationService {
     /**
      * Reenvía un código de verificación al usuario.
      *
-     * @param userId ID del usuario.
+     * @param email ID del usuario.
      * @param type   tipo de código.
      */
-    void resendCode(String userId, VerificationCodeType type);
+    void resendCode(String email, VerificationCodeType type);
 
     /**
      * Envía un código de recuperación de contraseña al correo.

@@ -57,13 +57,13 @@ public class AuthController {
   /**
    * Reenvía un nuevo código de activación al usuario especificado por su ID.
    *
-   * @param userId ID del usuario que solicita un nuevo código.
+   * @param email ID del usuario que solicita un nuevo código.
    * @return HTTP 204 si el código fue enviado exitosamente.
    */
-  @PostMapping("/activations/{userId}")
-  public ResponseEntity<Void> sendCodeAgain(@PathVariable String userId) {
-    log.info("📩 Reenviando código de activación al usuario con ID: {}", userId);
-    verificationService.resendCode(userId, VerificationCodeType.ACTIVATION);
+  @PostMapping("/activations/{email}")
+  public ResponseEntity<Void> sendCodeAgain(@PathVariable String email) {
+    log.info("📩 Reenviando código de activación al usuario con ID: {}", email);
+    verificationService.resendCode(email, VerificationCodeType.ACTIVATION);
     return ResponseEntity.noContent().build();
   }
 
@@ -95,6 +95,14 @@ public class AuthController {
   }
 
 
+  @PostMapping("/users/password/{email}")
+  public ResponseEntity<Void> resendPasswordResetCode(@PathVariable String email) {
+    log.info("📩 Reenviando código de activación al usuario con ID: {}", email);
+    verificationService.resendCode(email, VerificationCodeType.PASSWORD_RESET);
+    return ResponseEntity.noContent().build();
+  }
+
+
   /**
    * Solicita un código de recuperación de contraseña para el correo electrónico dado.
    *
@@ -107,6 +115,9 @@ public class AuthController {
     verificationService.sendPasswordResetCode(email);
     return ResponseEntity.noContent().build();
   }
+
+
+
 
   /**
    * Confirma la recuperación de contraseña usando un código enviado por correo electrónico.

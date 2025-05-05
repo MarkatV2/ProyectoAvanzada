@@ -78,24 +78,17 @@ public class VerificationServiceImpl implements VerificationService {
         validateUserAccount(verificationCode);
     }
 
-
-
     /**
      * Reenvía un nuevo código de verificación, eliminando códigos anteriores del usuario.
      *
-     * @param userId ID del usuario al que se le reenviará el código.
+     * @param email ID del usuario al que se le reenviará el código.
      * @param type tipo de código a reenviar.
      * @throws UserNotFoundException si no se encuentra el usuario.
      */
     @Override
-    public void resendCode(String userId, VerificationCodeType type) {
-        ObjectId objectId = new ObjectId(userId);
-        User user = userRepository.findById(objectId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        codeRepository.deleteAllByUserId(objectId);
-        log.info("Códigos previos eliminados para el usuario: {}", userId);
-
+    public void resendCode(String email, VerificationCodeType type) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
         generateAndSendCode(user, type);
     }
 
@@ -199,7 +192,7 @@ public class VerificationServiceImpl implements VerificationService {
 
         user.setAccountStatus(AccountStatus.ACTIVATED);
         userRepository.save(user);
-        codeRepository.delete(verificationCode);
+        codeRepository.deleteAllByUserId(user.getId());
 
         log.info("Cuenta activada y código eliminado para usuario: {}", user.getEmail());
     }
