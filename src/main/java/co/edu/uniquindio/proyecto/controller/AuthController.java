@@ -148,6 +148,24 @@ public class AuthController {
     return ResponseEntity.ok(response);
   }
 
+
+    @GetMapping("/logout")
+  public ResponseEntity<Void> logout(HttpServletRequest request) {
+    authService.logout(request);
+
+    // Create cookies with maxAge set to 0 to delete them
+    // Crear cookies para access y refresh
+    ResponseCookie accessTokenCookie = buildCookie("access_token", "", Duration.ofHours(0));
+    ResponseCookie refreshTokenCookie = buildCookie("refresh_token", "", Duration.ofDays(0));
+
+
+    // Return response with Set-Cookie headers to delete cookies
+    return ResponseEntity.noContent()
+        .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+        .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+        .build();
+  }
+
   /**
    * Construye una {@link ResponseCookie} con las siguientes propiedades:
    * <ul>
@@ -167,28 +185,13 @@ public class AuthController {
     log.debug("🔧 Construyendo cookie '{}', duración {} segundos", name, maxAge.getSeconds());
     return ResponseCookie.from(name, value)
         .httpOnly(true)
-        .secure(true)
+        //.secure(true)
         .path("/")
         .sameSite("Strict")
         .maxAge(maxAge)
         .build();
   }
 
-  @GetMapping("/logout")
-  public ResponseEntity<Void> logout(HttpServletRequest request) {
-    authService.logout(request);
 
-    // Create cookies with maxAge set to 0 to delete them
-    // Crear cookies para access y refresh
-    ResponseCookie accessTokenCookie = buildCookie("access_token", "", Duration.ofHours(0));
-    ResponseCookie refreshTokenCookie = buildCookie("refresh_token", "", Duration.ofDays(0));
-
-
-    // Return response with Set-Cookie headers to delete cookies
-    return ResponseEntity.noContent()
-        .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
-        .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-        .build();
-  }
 }
 

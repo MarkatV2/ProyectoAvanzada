@@ -25,6 +25,8 @@ public interface UserService {
      */
     UserResponse registerUser(UserRegistration userRegistration);
 
+    UserResponse getCurrentUser();
+
     /**
      * Obtiene la información de un usuario.
      *

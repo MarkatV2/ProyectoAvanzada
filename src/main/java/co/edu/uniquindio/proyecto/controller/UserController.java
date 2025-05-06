@@ -51,6 +51,13 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/me")
+  public ResponseEntity<UserResponse> consultUser(){
+    UserResponse user = userService.getCurrentUser();
+    return ResponseEntity.ok(user);
+  }
+
+
     /**
      * Registra un nuevo usuario.
      *

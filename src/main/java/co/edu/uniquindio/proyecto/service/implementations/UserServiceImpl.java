@@ -5,6 +5,7 @@ import co.edu.uniquindio.proyecto.dto.user.*;
 import co.edu.uniquindio.proyecto.entity.auth.VerificationCodeType;
 import co.edu.uniquindio.proyecto.entity.user.AccountStatus;
 import co.edu.uniquindio.proyecto.entity.user.User;
+import co.edu.uniquindio.proyecto.util.SecurityUtils;
 import co.edu.uniquindio.proyecto.exception.user.EmailAlreadyExistsException;
 import co.edu.uniquindio.proyecto.exception.user.InvalidPasswordException;
 import co.edu.uniquindio.proyecto.exception.global.ServiceUnavailableException;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 /**
  * Servicio que gestiona operaciones relacionadas con usuarios, como registro,
  * actualización, eliminación lógica y recuperación de usuarios.
@@ -34,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final SecurityUtils securityUtils;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final VerificationService verificationService;
@@ -72,6 +75,18 @@ public class UserServiceImpl implements UserService {
             log.error("Error de acceso a datos al obtener usuarios: {}", e.getMessage(), e);
             throw new ServiceUnavailableException("Error de acceso a datos");
         }
+    }
+
+    @Override
+    public UserResponse getCurrentUser() {
+        String userId = securityUtils.getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.info("Usuario no encontrado id: {}", userId);
+                    return new UserNotFoundException(userId);
+                } );
+        log.info("Usuario encontrado!!");
+        return userMapper.toUserResponse(user);
     }
 
     /**
