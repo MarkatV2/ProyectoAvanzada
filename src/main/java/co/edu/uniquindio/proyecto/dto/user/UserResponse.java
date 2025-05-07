@@ -11,6 +11,7 @@ public record UserResponse(
         String fullName,
         LocalDate dateBirth,
         String accountStatus,
+        double notificationRadiusKm,
         String cityOfResidence,
         double latitude,
         double longitude

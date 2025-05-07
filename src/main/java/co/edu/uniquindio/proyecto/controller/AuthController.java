@@ -1,7 +1,6 @@
 package co.edu.uniquindio.proyecto.controller;
 
 import java.time.Duration;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import co.edu.uniquindio.proyecto.dto.response.SuccessResponse;
 import co.edu.uniquindio.proyecto.dto.user.JwtAccessResponse;
 import co.edu.uniquindio.proyecto.dto.user.JwtResponse;
@@ -82,7 +80,7 @@ public class AuthController {
     log.info("✅ Autenticación exitosa para el usuario: {}", request.userName());
 
     // Crear cookies para access y refresh
-        ResponseCookie accessTokenCookie  = buildCookie("access_token",  jwtResponse.token(),        Duration.ofHours(1));
+    ResponseCookie accessTokenCookie  = buildCookie("access_token",  jwtResponse.token(),        Duration.ofHours(1));
     ResponseCookie refreshTokenCookie = buildCookie("refresh_token", jwtResponse.refreshToken(), Duration.ofDays(7));
     log.debug("Cookies generadas: access_token ({}s), refresh_token ({}s)",
         accessTokenCookie.getMaxAge(), refreshTokenCookie.getMaxAge());
@@ -138,15 +136,24 @@ public class AuthController {
    * @param refreshToken Objeto que contiene el refresh token.
    * @return Un {@link JwtResponse} con el nuevo token de acceso.
    */
-  @PostMapping("/accessTokens")
-  public ResponseEntity<JwtAccessResponse> refreshToken(
-      @CookieValue(name = "refresh_token", required = true) String refreshToken) {
+@PostMapping("/accessTokens")
+public ResponseEntity<Void> refreshToken(
+    @CookieValue(name = "refresh_token", required = true) String refreshTokenValue
+) {
+  log.info("Recibida solicitud de refresco de token.");
 
-    log.info("Recibida solicitud de refresco de token.");
-
-    JwtAccessResponse response = authService.refreshAccessToken(refreshToken);
-    return ResponseEntity.ok(response);
-  }
+  JwtAccessResponse resp = authService.refreshAccessToken(refreshTokenValue);
+  // generas solo la cookie de access_token
+  ResponseCookie accessTokenCookie = buildCookie(
+      "access_token",
+      resp.accessToken(),
+      Duration.ofHours(1)
+  );
+  // no tocamos el refresh_token, sigue siendo el mismo
+  return ResponseEntity.ok()
+      .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+      .build();
+}
 
 
     @GetMapping("/logout")
