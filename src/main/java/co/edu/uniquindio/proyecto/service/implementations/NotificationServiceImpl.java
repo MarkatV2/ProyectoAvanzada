@@ -1,6 +1,6 @@
 package co.edu.uniquindio.proyecto.service.implementations;
 
-import co.edu.uniquindio.proyecto.controller.NotificationWebSocketController;
+import co.edu.uniquindio.proyecto.controller.NotificationSseController;
 import co.edu.uniquindio.proyecto.dto.notification.NotificationCreateDTO;
 import co.edu.uniquindio.proyecto.dto.notification.NotificationDTO;
 import co.edu.uniquindio.proyecto.entity.notification.Notification;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final NotificationWebSocketController webSocketController;
+    private final NotificationSseController notificationSseController;
     private final NotificationMapper notificationMapper;
 
     /**
@@ -47,7 +47,7 @@ public class NotificationServiceImpl implements NotificationService {
             NotificationDTO dto = notificationMapper.toDTO(saved);
 
             // Enviar por WebSocket
-            webSocketController.sendNotification(createDTO.userId(), dto);
+            notificationSseController.sendNotification(createDTO.userId(), dto);
             log.info("Notificación enviada al usuario {}", createDTO.userId());
 
         } catch (Exception e) {

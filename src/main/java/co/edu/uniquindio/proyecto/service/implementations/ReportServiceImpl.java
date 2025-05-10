@@ -159,6 +159,55 @@ public class ReportServiceImpl implements ReportService {
     }
 
 
+        /**
+     * Obtiene todos los reportes que no han sido eliminados, con paginación.
+     *
+     * @param page Número de página (por defecto 1).
+     * @param size Tamaño de página (máximo 100, por defecto 30).
+     * @return PaginatedReportResponse con los reportes activos.
+     */
+    @Override
+    public PaginatedReportResponse getAllReports(Integer page, Integer size) {
+        final int pageSize = size != null ? Math.min(size, 100) : 30;
+        final int pageNumber = page != null ? Math.max(page, 1) : 1;
+
+        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
+
+        log.info("Obteniendo todos los reportes (página {} de tamaño {})", pageNumber, pageSize);
+
+        // Asegúrate de que tu repositorio acepte Pageable
+        Page<Report> reportsPage = reportRepository.findAllReports(pageable);
+
+        log.info("Se encontraron {} reportes (total páginas: {})",
+                reportsPage.getTotalElements(), reportsPage.getTotalPages());
+
+        return mapToPaginatedResponse(reportsPage, pageNumber);
+    }
+
+    @Override
+    public PaginatedReportResponse getAllReportsByUserId(Integer page, Integer size) {
+        final int pageSize;
+        pageSize = size != null ? Math.min(size, 100) : 30;
+        final int pageNumber = page != null ? Math.max(page, 1) : 1;
+
+        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
+
+        log.info("Obteniendo todos los reportes (página {} de tamaño {})", pageNumber, pageSize);
+
+        ObjectId userId = new ObjectId(securityUtils.getCurrentUserId());
+        // Asegúrate de que tu repositorio acepte Pageable
+        Page<Report> reportsPage = reportRepository.findAllReportsByUserId(pageable, userId);
+
+        log.info("Se encontraron {} reportes (total páginas: {})",
+                reportsPage.getTotalElements(), reportsPage.getTotalPages());
+
+        return mapToPaginatedResponse(reportsPage, pageNumber);
+    }
+
+
+
+
+
     /**
      * Realiza un soft delete de un reporte, cambiando su estado a DELETED y registrando el cambio en el historial.
      *
@@ -522,8 +571,6 @@ public class ReportServiceImpl implements ReportService {
         report.setImportantVotes(report.getImportantVotes() + 1);
         log.info("Se ha sumado un voto del usuario {} para el reporte {}", userObjectId, report.getId());
     }
-
-
 
 
 }

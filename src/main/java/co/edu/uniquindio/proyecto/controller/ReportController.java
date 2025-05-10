@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.net.URI;
 import java.util.List;
@@ -57,6 +58,37 @@ public class ReportController {
         PaginatedReportResponse response = reportService.getReportsNearLocation(latitud, longitud, radio, page, size, categories);
         return ResponseEntity.ok(response);
     }
+
+        /**
+     * Retorna todos los reportes activos (excluyendo los eliminados), con paginación.
+     * Solo accesible por usuarios con rol ADMIN.
+     *
+     * @param page Número de página (opcional, por defecto 1).
+     * @param size Tamaño de página (opcional, por defecto 30, máximo 100).
+     * @return Lista paginada de reportes activos.
+     */
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PaginatedReportResponse> getAllReportsAdmin(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        log.info("📋 Listando todos los reportes (page={}, size={})", page, size);
+        PaginatedReportResponse response = reportService.getAllReports(page, size);
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/my")
+    public ResponseEntity<PaginatedReportResponse> getAllReportsAdminByUser(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        log.info("📋 Listando todos los reportes (page={}, size={})", page, size);
+        PaginatedReportResponse response = reportService.getAllReportsByUserId(page, size);
+        return ResponseEntity.ok(response);
+    }
+
 
     /**
      * Obtiene un reporte específico por su ID.

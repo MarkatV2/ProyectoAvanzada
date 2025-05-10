@@ -33,10 +33,20 @@ public interface ReportRepository extends MongoRepository<Report, ObjectId> {
      */
     boolean existsByTitleAndDescription(String title, String description);
 
+
     @Override
     @Query("""
             {'_id': ?0,'reportStatus': { $ne: 'DELETED' }}""")
     Optional<Report> findById(ObjectId id);
+
+     @Query("""
+            {'reportStatus': { $ne: 'DELETED'}}""")
+    Page<Report> findAllReports(Pageable pageable);
+
+
+    @Query("""
+            {'userId': ?1, 'reportStatus': { $ne: 'DELETED'}}""")
+    Page<Report> findAllReportsByUserId(Pageable pageable, ObjectId userId);
 
     /**
      * Busca los reportes cercanos a una ubicación específica, dentro de una distancia máxima.

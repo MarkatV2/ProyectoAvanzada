@@ -11,6 +11,9 @@ import java.util.List;
 public interface ReportStatusHistoryService {
 
     public void createHistory(ObjectId reportId, ObjectId userId, ReportStatus previousStatus, ReportStatus newStatus);
+
+    PaginatedHistoryResponse getAllHistories(int page, int size);
+
     public ReportStatusHistoryResponse getHistoryById(String historyId);
     public PaginatedHistoryResponse getHistoryByReportId(String reportId, int page, int size);
     public PaginatedHistoryResponse getHistoryByUserId(String userId, int page, int size);

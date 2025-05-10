@@ -32,6 +32,8 @@ public interface ReportStatusHistoryRepository extends MongoRepository<ReportSta
     @Query("{ 'reportId': ?0 }")
     Page<ReportStatusHistory> findByReportId(ObjectId reportId, Pageable pageable);
 
+    Page<ReportStatusHistory> findAll(Pageable pageable);
+
 
     /**
      * Obtiene el historial de cambios de estado de un reporte específico dentro de un rango de fechas.

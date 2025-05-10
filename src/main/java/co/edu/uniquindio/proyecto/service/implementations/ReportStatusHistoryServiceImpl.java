@@ -21,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Servicio para la gestión del historial de estados de reportes.
@@ -51,6 +50,17 @@ public class ReportStatusHistoryServiceImpl implements ReportStatusHistoryServic
                 reportId, previousStatus, newStatus, userId);
         historyRepository.save(reportStatusHistory);
     }
+
+
+    @Override
+    public PaginatedHistoryResponse getAllHistories(int page, int size) {
+        log.info("Solicitando todos los historiales completo. Página: {}, Tamaño: {}", page, size);
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<ReportStatusHistory> result =
+                historyRepository.findAll(pageable);
+        return toPaginatedHistoryResponse(result, page, size);
+    }
+
 
     /**
      * Obtiene un historial específico por su ID.

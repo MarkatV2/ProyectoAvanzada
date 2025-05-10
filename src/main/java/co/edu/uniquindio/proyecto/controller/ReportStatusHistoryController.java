@@ -37,6 +37,14 @@ public class ReportStatusHistoryController {
         return ResponseEntity.ok(historyService.getHistoryById(historyId));
     }
 
+    @GetMapping()
+    public ResponseEntity<PaginatedHistoryResponse> getAllHistories(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("📄 Todos los Historiales (página {}, tamaño {})" , page, size);
+        return ResponseEntity.ok(historyService.getAllHistories(page, size));
+    }
+
 
     /**
      * Retorna el historial completo de cambios de estado asociados a un reporte específico,

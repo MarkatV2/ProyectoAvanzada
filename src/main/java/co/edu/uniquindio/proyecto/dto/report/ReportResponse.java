@@ -16,7 +16,7 @@ public record ReportResponse(
         double latitude,
         double longitude,
         String reportStatus,
-        LocalDateTime dateCreation,
+        LocalDateTime createdAt,
         int importantVotes,
         String userId
 ) {}

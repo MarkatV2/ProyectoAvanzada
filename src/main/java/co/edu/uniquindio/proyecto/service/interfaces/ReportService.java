@@ -19,6 +19,8 @@ public interface ReportService {
      */
     ReportResponse createReport(ReportRequest request);
 
+    PaginatedReportResponse getAllReports(Integer page, Integer size);
+
     /**
      * Obtiene un reporte por su ID.
      *
@@ -40,6 +42,8 @@ public interface ReportService {
      */
     PaginatedReportResponse getReportsNearLocation(double latitude, double longitude, Double radiusKm,
                                                    Integer page, Integer size, List<String> categories);
+
+    PaginatedReportResponse getAllReportsByUserId(Integer page, Integer size);
 
     /**
      * Elimina lógicamente un reporte.
