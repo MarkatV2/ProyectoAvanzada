@@ -1,7 +1,10 @@
 package co.edu.uniquindio.proyecto.service.interfaces;
 
+import co.edu.uniquindio.proyecto.annotation.CheckSelfOrAdminPermission;
+import co.edu.uniquindio.proyecto.annotation.CheckSelfPermission;
 import co.edu.uniquindio.proyecto.dto.response.SuccessResponse;
 import co.edu.uniquindio.proyecto.dto.user.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Servicio para gestionar usuarios del sistema.
@@ -15,6 +18,8 @@ public interface UserService {
      * @param size tamaño de página.
      * @return usuarios paginados.
      */
+
+    @PreAuthorize("hasRole('ADMIN')")
     PaginatedUserResponse getUsers(int page, int size);
 
     /**
@@ -33,6 +38,8 @@ public interface UserService {
      * @param userId ID del usuario.
      * @return usuario encontrado.
      */
+
+    @CheckSelfOrAdminPermission
     UserResponse getUser(String userId);
 
     /**
@@ -42,6 +49,8 @@ public interface UserService {
      * @param userUpdateRequest nuevos datos.
      * @return usuario actualizado.
      */
+
+    @CheckSelfPermission
     UserResponse updateUser(String id, UserUpdateRequest userUpdateRequest);
 
     /**
@@ -51,6 +60,8 @@ public interface UserService {
      * @param passwordUpdate  nueva contraseña.
      * @return respuesta de éxito.
      */
+
+    @CheckSelfPermission
     SuccessResponse updateUserPassword(String id, PasswordUpdate passwordUpdate);
 
     /**
@@ -59,5 +70,7 @@ public interface UserService {
      * @param id ID del usuario.
      * @return respuesta de éxito.
      */
+
+    @CheckSelfPermission
     SuccessResponse deleteUser(String id);
 }

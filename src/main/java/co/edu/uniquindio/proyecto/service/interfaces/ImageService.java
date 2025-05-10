@@ -1,7 +1,9 @@
 package co.edu.uniquindio.proyecto.service.interfaces;
 
+import co.edu.uniquindio.proyecto.annotation.CheckOwnerOrAdmin;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageUploadRequest;
+import co.edu.uniquindio.proyecto.entity.image.Image;
 import org.bson.types.ObjectId;
 
 import java.util.List;
@@ -32,6 +34,8 @@ public interface ImageService {
      *
      * @param id ID de la imagen.
      */
+
+    @CheckOwnerOrAdmin(entityClass = Image.class)
     void deleteImage(String id);
 
     /**

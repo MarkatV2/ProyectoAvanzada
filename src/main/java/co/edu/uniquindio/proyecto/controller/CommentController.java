@@ -1,9 +1,7 @@
 package co.edu.uniquindio.proyecto.controller;
 
-import co.edu.uniquindio.proyecto.annotation.CheckOwnerOrAdmin;
 import co.edu.uniquindio.proyecto.dto.comment.CommentRequest;
 import co.edu.uniquindio.proyecto.dto.comment.CommentResponse;
-import co.edu.uniquindio.proyecto.entity.comment.Comment;
 import co.edu.uniquindio.proyecto.service.interfaces.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +74,6 @@ public class CommentController {
      * @return Comentario actualizado con estado <code>ELIMINATED</code>.
      */
     @DeleteMapping("/{commentId}")
-    @CheckOwnerOrAdmin(entityClass = Comment.class)
     public ResponseEntity<CommentResponse> softDeleteComment(@PathVariable String commentId) {
         log.info("🗑️ Solicitud de soft delete para comentario con ID: {}", commentId);
         CommentResponse response = commentService.softDeleteComment(commentId);

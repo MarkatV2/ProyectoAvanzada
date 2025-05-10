@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -65,7 +64,6 @@ public class CategoryController {
      * @return Categoría creada con HTTP 201 y ubicación.
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
         log.info("➕ Creando nueva categoría: {}", request.name());
         CategoryResponse createdCategory = categoryService.createCategory(request);
@@ -91,7 +89,6 @@ public class CategoryController {
      * @return Categoría actualizada con HTTP 200.
      */
     @PutMapping("/{categoryId}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponse> updateCategory(
             @PathVariable String categoryId,
             @Valid @RequestBody CategoryRequest request) {
@@ -117,7 +114,6 @@ public class CategoryController {
      * @return HTTP 204 sin contenido.
      */
     @DeleteMapping("/{categoryId}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deactivateCategory(@PathVariable String categoryId) {
         log.info("⛔ Solicitando desactivación de categoría con ID: {}", categoryId);
         categoryService.deactivateCategory(categoryId);

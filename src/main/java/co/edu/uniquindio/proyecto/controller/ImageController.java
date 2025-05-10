@@ -2,8 +2,6 @@ package co.edu.uniquindio.proyecto.controller;
 
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageUploadRequest;
-import co.edu.uniquindio.proyecto.entity.image.Image;
-import co.edu.uniquindio.proyecto.annotation.CheckOwnerOrAdmin;
 import co.edu.uniquindio.proyecto.service.interfaces.ImageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +74,6 @@ public class ImageController {
      * @return HTTP 204 sin contenido si la operación es exitosa.
      */
     @DeleteMapping("/{id}")
-    @CheckOwnerOrAdmin(entityClass = Image.class)
     public ResponseEntity<Void> deactivateImage(@PathVariable String id) {
         log.info("🗑️ Solicitando eliminación de imagen con ID: {}", id);
         imageService.deleteImage(id);

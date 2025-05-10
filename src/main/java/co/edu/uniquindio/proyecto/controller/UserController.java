@@ -2,8 +2,6 @@ package co.edu.uniquindio.proyecto.controller;
 
 import co.edu.uniquindio.proyecto.dto.response.SuccessResponse;
 import co.edu.uniquindio.proyecto.dto.user.*;
-import co.edu.uniquindio.proyecto.annotation.CheckSelfOrAdminPermission;
-import co.edu.uniquindio.proyecto.annotation.CheckSelfPermission;
 import co.edu.uniquindio.proyecto.service.interfaces.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -11,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -40,7 +37,6 @@ public class UserController {
      * @return Lista paginada de usuarios.
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaginatedUserResponse> getUsers(
             @RequestParam(defaultValue = "1") @Positive(message = "La página debe ser un número positivo") int page,
             @RequestParam(defaultValue = "30") @Positive(message = "El tamaño debe ser un número positivo") int size) {
@@ -52,10 +48,10 @@ public class UserController {
     }
 
     @GetMapping("/me")
-  public ResponseEntity<UserResponse> consultUser(){
-    UserResponse user = userService.getCurrentUser();
-    return ResponseEntity.ok(user);
-  }
+    public ResponseEntity<UserResponse> consultUser(){
+        UserResponse user = userService.getCurrentUser();
+        return ResponseEntity.ok(user);
+    }
 
 
     /**
@@ -87,7 +83,6 @@ public class UserController {
      * @return Datos del usuario.
      */
     @GetMapping("/{userId}")
-    @CheckSelfOrAdminPermission
     public ResponseEntity<UserResponse> getUser(@PathVariable String userId) {
         log.info("🔎 Consultando usuario con ID: {}", userId);
         UserResponse response = userService.getUser(userId);
@@ -103,7 +98,6 @@ public class UserController {
      * @return Usuario actualizado.
      */
     @PutMapping("/{id}")
-    @CheckSelfPermission
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable String id,
             @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
@@ -130,7 +124,6 @@ public class UserController {
      * @return Confirmación de actualización.
      */
     @PatchMapping("/{id}/password")
-    @CheckSelfPermission
     public ResponseEntity<SuccessResponse> updateUserPassword(
             @PathVariable String id,
             @Valid @RequestBody PasswordUpdate passwordUpdate) {
@@ -147,7 +140,6 @@ public class UserController {
      * @return Sin contenido si fue exitoso.
      */
     @DeleteMapping("/{id}")
-    @CheckSelfPermission
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         log.info("🗑️ Eliminando usuario con ID: {}", id);
         userService.deleteUser(id);

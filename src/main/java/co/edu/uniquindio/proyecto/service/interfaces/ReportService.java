@@ -1,9 +1,11 @@
 package co.edu.uniquindio.proyecto.service.interfaces;
 
+import co.edu.uniquindio.proyecto.annotation.CheckOwnerOrAdmin;
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
 import co.edu.uniquindio.proyecto.dto.report.*;
-import org.springframework.transaction.annotation.Transactional;
+import co.edu.uniquindio.proyecto.entity.report.Report;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 /**
@@ -19,6 +21,8 @@ public interface ReportService {
      */
     ReportResponse createReport(ReportRequest request);
 
+
+    @PreAuthorize("hasRole('ADMIN')")
     PaginatedReportResponse getAllReports(Integer page, Integer size);
 
     /**
@@ -37,7 +41,6 @@ public interface ReportService {
      * @param radiusKm   radio en kilómetros (puede ser nulo).
      * @param page       número de página.
      * @param size       tamaño de página.
-     * @param categories
      * @return lista paginada de reportes cercanos.
      */
     PaginatedReportResponse getReportsNearLocation(double latitude, double longitude, Double radiusKm,
@@ -50,6 +53,8 @@ public interface ReportService {
      *
      * @param reportId ID del reporte.
      */
+
+    @CheckOwnerOrAdmin(entityClass = Report.class)
     void softDeleteReport(String reportId);
 
     /**
@@ -60,6 +65,7 @@ public interface ReportService {
      * @return reporte actualizado.
      */
 
+    @CheckOwnerOrAdmin(entityClass = Report.class)
     ReportResponse updateReport(String reportId, ReportUpdateDto request);
 
     /**
@@ -68,6 +74,8 @@ public interface ReportService {
      * @param reportId ID del reporte.
      * @param dto      nuevo estado.
      */
+
+    @CheckOwnerOrAdmin(entityClass = Report.class)
     void updateReportStatus(String reportId, ReportStatusUpdate dto);
 
     /**

@@ -1,8 +1,10 @@
 package co.edu.uniquindio.proyecto.service.interfaces;
 
+import co.edu.uniquindio.proyecto.annotation.CheckOwnerOrAdmin;
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.comment.CommentRequest;
 import co.edu.uniquindio.proyecto.dto.comment.CommentResponse;
+import co.edu.uniquindio.proyecto.entity.comment.Comment;
 
 /**
  * Servicio para gestionar comentarios relacionados con reportes.
@@ -41,5 +43,7 @@ public interface CommentService {
      * @param commentId ID del comentario.
      * @return comentario eliminado lógicamente.
      */
+
+    @CheckOwnerOrAdmin(entityClass = Comment.class)
     CommentResponse softDeleteComment(String commentId);
 }

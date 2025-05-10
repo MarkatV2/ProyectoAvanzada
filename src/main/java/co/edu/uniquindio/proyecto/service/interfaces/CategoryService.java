@@ -2,6 +2,7 @@ package co.edu.uniquindio.proyecto.service.interfaces;
 
 import co.edu.uniquindio.proyecto.dto.category.CategoryRequest;
 import co.edu.uniquindio.proyecto.dto.category.CategoryResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -23,6 +24,7 @@ public interface CategoryService {
      * @param request datos de la categoría a crear.
      * @return categoría creada.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     CategoryResponse createCategory(CategoryRequest request);
 
     /**
@@ -32,6 +34,7 @@ public interface CategoryService {
      * @param request nuevos datos de la categoría.
      * @return categoría actualizada.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     CategoryResponse updateCategory(String id, CategoryRequest request);
 
     /**
@@ -39,13 +42,9 @@ public interface CategoryService {
      *
      * @param id ID de la categoría a desactivar.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     void deactivateCategory(String id);
 
-    /**
-     * Obtiene una categoría por su ID.
-     *
-     * @param id ID de la categoría.
-     * @return categoría encontrada.
-     */
+
     CategoryResponse getCategoryById(String id);
 }

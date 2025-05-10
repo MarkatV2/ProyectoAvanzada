@@ -2,7 +2,6 @@ package co.edu.uniquindio.proyecto.controller;
 
 import co.edu.uniquindio.proyecto.dto.report.PaginatedReportSummaryResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportFilterDTO;
-import co.edu.uniquindio.proyecto.dto.report.ReportSummaryDTO;
 import co.edu.uniquindio.proyecto.service.interfaces.ReportSummaryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,11 +9,9 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 /**
  * Controlador REST para generar informes de reportes en formato PDF.
@@ -37,7 +34,6 @@ public class ReportSummaryController {
      * @return Archivo PDF generado, adjunto en la respuesta.
      */
     @PostMapping("/pdf")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<byte[]> generatePdf(
             @RequestBody ReportFilterDTO filter,
             @RequestParam(defaultValue = "1") int page,

@@ -3,19 +3,14 @@ package co.edu.uniquindio.proyecto.controller;
 import co.edu.uniquindio.proyecto.dto.comment.CommentPaginatedResponse;
 import co.edu.uniquindio.proyecto.dto.image.ImageResponse;
 import co.edu.uniquindio.proyecto.dto.report.*;
-import co.edu.uniquindio.proyecto.entity.report.Report;
-import co.edu.uniquindio.proyecto.annotation.CheckOwnerOrAdmin;
 import co.edu.uniquindio.proyecto.service.interfaces.ReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.net.URI;
 import java.util.List;
@@ -68,7 +63,6 @@ public class ReportController {
      * @return Lista paginada de reportes activos.
      */
     @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaginatedReportResponse> getAllReportsAdmin(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size
@@ -131,7 +125,6 @@ public class ReportController {
      * @return Reporte actualizado.
      */
     @PutMapping("/{reportId}")
-    @CheckOwnerOrAdmin(entityClass = Report.class)
     public ResponseEntity<ReportResponse> updateReport(
             @PathVariable String reportId,
             @Valid @RequestBody ReportUpdateDto request) {
@@ -157,7 +150,6 @@ public class ReportController {
      * @return HTTP 204 si fue eliminado correctamente.
      */
     @DeleteMapping("/{reportId}")
-    @CheckOwnerOrAdmin(entityClass = Report.class)
     public ResponseEntity<Void> deleteReport(@PathVariable String reportId) {
         log.info("🗑️ Eliminando reporte con ID: {}", reportId);
         reportService.softDeleteReport(reportId);
@@ -171,7 +163,6 @@ public class ReportController {
      * @param dto      Estado y mensaje adicional.
      */
     @PatchMapping("/{reportId}/status")
-    @CheckOwnerOrAdmin(entityClass = Report.class)
     public ResponseEntity<Void> updateReportStatus(
             @PathVariable String reportId,
             @RequestBody ReportStatusUpdate dto) {

@@ -4,11 +4,10 @@ import co.edu.uniquindio.proyecto.dto.report.PaginatedHistoryResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportStatusHistoryResponse;
 import co.edu.uniquindio.proyecto.entity.report.ReportStatus;
 import co.edu.uniquindio.proyecto.exception.report.HistoryNotFoundException;
-import co.edu.uniquindio.proyecto.service.implementations.ReportStatusHistoryServiceImpl;
+import co.edu.uniquindio.proyecto.service.interfaces.ReportStatusHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 
@@ -19,10 +18,9 @@ import java.time.LocalDateTime;
 @RequestMapping("/api/v1/report-status-histories")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('ADMIN')") // Aplica a todos los métodos
 public class ReportStatusHistoryController {
 
-    private final ReportStatusHistoryServiceImpl historyService;
+    private final ReportStatusHistoryService historyService;
 
     /**
      * Recupera un historial de cambios de estado específico a partir de su identificador único.

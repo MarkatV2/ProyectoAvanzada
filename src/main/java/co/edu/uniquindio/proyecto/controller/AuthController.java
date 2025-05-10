@@ -130,30 +130,29 @@ public class AuthController {
     return ResponseEntity.ok(new SuccessResponse("Contraseña actualizada exitosamente"));
   }
 
-  /**
-   * Endpoint para refrescar el token de acceso mediante refresh token.
-   *
-   * @param refreshToken Objeto que contiene el refresh token.
-   * @return Un {@link JwtResponse} con el nuevo token de acceso.
-   */
-@PostMapping("/accessTokens")
-public ResponseEntity<Void> refreshToken(
-    @CookieValue(name = "refresh_token", required = true) String refreshTokenValue
-) {
-  log.info("Recibida solicitud de refresco de token.");
+    /**
+     * Endpoint para refrescar el token de acceso mediante refresh token.
+     *
+     * @return Un {@link JwtResponse} con el nuevo token de acceso.
+     */
+  @PostMapping("/accessTokens")
+  public ResponseEntity<Void> refreshToken(
+      @CookieValue(name = "refresh_token") String refreshTokenValue
+  ) {
+    log.info("Recibida solicitud de refresco de token.");
 
-  JwtAccessResponse resp = authService.refreshAccessToken(refreshTokenValue);
-  // generas solo la cookie de access_token
-  ResponseCookie accessTokenCookie = buildCookie(
-      "access_token",
-      resp.accessToken(),
-      Duration.ofHours(1)
-  );
-  // no tocamos el refresh_token, sigue siendo el mismo
-  return ResponseEntity.ok()
-      .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
-      .build();
-}
+    JwtAccessResponse resp = authService.refreshAccessToken(refreshTokenValue);
+    // generas solo la cookie de access_token
+    ResponseCookie accessTokenCookie = buildCookie(
+        "access_token",
+        resp.accessToken(),
+        Duration.ofHours(1)
+    );
+    // no tocamos el refresh_token, sigue siendo el mismo
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+        .build();
+  }
 
 
     @GetMapping("/logout")

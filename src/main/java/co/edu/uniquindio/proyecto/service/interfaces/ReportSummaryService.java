@@ -2,13 +2,14 @@ package co.edu.uniquindio.proyecto.service.interfaces;
 
 import co.edu.uniquindio.proyecto.dto.report.PaginatedReportSummaryResponse;
 import co.edu.uniquindio.proyecto.dto.report.ReportFilterDTO;
-import co.edu.uniquindio.proyecto.dto.report.ReportSummaryDTO;
+import org.springframework.security.access.prepost.PreAuthorize;
 
-import java.util.List;
 
 /**
  * Servicio para generar resúmenes y reportes en PDF de los incidentes.
  */
+
+@PreAuthorize("hasRole('ADMIN')")
 public interface ReportSummaryService {
 
     /**
