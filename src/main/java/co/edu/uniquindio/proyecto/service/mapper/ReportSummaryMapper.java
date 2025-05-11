@@ -18,10 +18,11 @@ public interface ReportSummaryMapper {
 
     List<ReportSummaryDTO> toReportSummaryDto (List<Report> reports);
 
-    @Mapping(target = "reportId", source = "id", qualifiedByName = "objectIdToString")
-    @Mapping(target = "latitude", source = "location.y")
-    @Mapping(target = "longitude", source = "location.x")
+    @Mapping(target = "reportId",    source = "id", qualifiedByName = "objectIdToString")
+    @Mapping(target = "latitude",    source = "location.y")
+    @Mapping(target = "longitude",   source = "location.x")
     @Mapping(target = "categoryNames", source = "categoryList", qualifiedByName = "mapCategoryNames")
+    @Mapping(target = "status",      expression = "java(report.getReportStatus().name())")
     ReportSummaryDTO toReportSummaryDto(Report report);
 
 

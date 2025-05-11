@@ -12,6 +12,8 @@ import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -182,36 +184,48 @@ public class ReportSummaryServiceImpl implements ReportSummaryService {
      * @param paginated Lista de objetos {@link ReportSummaryDTO} que representan los reportes a mostrar en la tabla.
      * @return Cadena de texto HTML con la tabla completamente generada y embebida en la plantilla.
      */
-    private String buildHtmlTable(PaginatedReportSummaryResponse paginated) {
-        String template = loadHtmlTemplate(); // sigue siendo tu base
+    // Formateador de 12h con AM/PM, año-mes-día y hora:minuto
+    private static final DateTimeFormatter DATE_FORMATTER =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a", Locale.ENGLISH);
 
+    private String buildHtmlTable(PaginatedReportSummaryResponse paginated) {
+        String template = loadHtmlTemplate();
         StringBuilder rowsBuilder = new StringBuilder();
+
         for (ReportSummaryDTO r : paginated.content()) {
+            // Si ReportSummaryDTO expone LocalDateTime:
+            String formattedDate = r.createdAt().format(DATE_FORMATTER);
+
+            // Si en cambio expone String ISO, primero parsear:
+            // LocalDateTime dt = LocalDateTime.parse(r.createdAt());
+            // String formattedDate = dt.format(DATE_FORMATTER);
+
             rowsBuilder.append("<tr>")
-                    .append("<td>").append(escapeHtml(r.reportId())).append("</td>")
-                    .append("<td>").append(escapeHtml(r.title())).append("</td>")
-                    .append("<td>").append(escapeHtml(r.description())).append("</td>")
-                    .append("<td>").append(escapeHtml(String.join(", ", r.categoryNames()))).append("</td>")
-                    .append("<td>").append(escapeHtml(r.status())).append("</td>")
-                    .append("<td>").append(r.createdAt()).append("</td>")
-                    .append("<td>").append(r.latitude()).append("</td>")
-                    .append("<td>").append(r.longitude()).append("</td>")
-                    .append("</tr>");
+                .append("<td>").append(escapeHtml(r.reportId())).append("</td>")
+                .append("<td>").append(escapeHtml(r.title())).append("</td>")
+                .append("<td>").append(escapeHtml(r.description())).append("</td>")
+                .append("<td>").append(escapeHtml(String.join(", ", r.categoryNames()))).append("</td>")
+                .append("<td>").append(escapeHtml(r.status())).append("</td>")
+                // aquí usamos el formattedDate
+                .append("<td>").append(formattedDate).append("</td>")
+                .append("<td>").append(r.latitude()).append("</td>")
+                .append("<td>").append(r.longitude()).append("</td>")
+                .append("</tr>");
         }
 
         String metadata = String.format(
-                "<p><strong>Total de reportes:</strong> %d<br />" +
-                        "<strong>Página:</strong> %d<br />" +
-                        "<strong>Total páginas:</strong> %d<br />" +
-                        "<strong>Tamaño de página:</strong> %d </p>",
-                paginated.totalElements(), paginated.page(), paginated.totalPages(), paginated.size()
+            "<p><strong>Total de reportes:</strong> %d<br />" +
+            "<strong>Página:</strong> %d<br />" +
+            "<strong>Total páginas:</strong> %d<br />" +
+            "<strong>Tamaño de página:</strong> %d </p>",
+            paginated.totalElements(), paginated.page(),
+            paginated.totalPages(), paginated.size()
         );
 
         return template
-                .replace("{{metadata}}", metadata)
-                .replace("{{rows}}", rowsBuilder.toString());
+            .replace("{{metadata}}", metadata)
+            .replace("{{rows}}", rowsBuilder.toString());
     }
-
 
 
     /**
