@@ -53,6 +53,14 @@ public class CategoryServiceImpl implements CategoryService {
                 .toList();
     }
 
+    @Override
+    public List<CategoryResponse> findAllCategories() {
+        log.info("Solicitando lista de categorías activas");
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toCategoryResponse)
+                .toList();
+    }
+
     /**
      * Obtiene la información de una categoría a partir de su ID.
      *

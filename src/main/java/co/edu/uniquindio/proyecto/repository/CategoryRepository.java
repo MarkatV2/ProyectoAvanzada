@@ -19,6 +19,8 @@ public interface CategoryRepository extends MongoRepository<Category, ObjectId> 
      */
     List<Category> findAllByActivatedTrue();
 
+    List<Category> findAll();
+
     /**
      * Obtiene una categoría activada por su identificador único.
      *

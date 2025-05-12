@@ -40,6 +40,12 @@ public class CategoryController {
         return categoryService.findAllActiveCategories();
     }
 
+    @GetMapping("/all")
+    public List<CategoryResponse> getAllCategories() {
+        log.info("📋 Consultando todas las categorías activas");
+        return categoryService.findAllCategories();
+    }
+
     /**
      * Obtiene los detalles de una categoría específica por su ID.
      *

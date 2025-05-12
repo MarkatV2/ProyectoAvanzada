@@ -8,5 +8,6 @@ public record CategoryResponse(
         String id,
         String name,
         String description,
-        String createdAt
+        String createdAt,
+        boolean activated
 ) {}
