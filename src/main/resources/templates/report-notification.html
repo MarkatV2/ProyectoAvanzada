@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nuevo reporte cerca de ti</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .email-container {
+            width: 100%;
+            padding: 30px 0;
+            background-color: #f4f6f8;
+        }
+
+        .email-content {
+            background-color: #ffffff;
+            max-width: 600px;
+            margin: auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background-color: #4CAF50; /* Verde para notificaciones de ubicación */
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .body {
+            padding: 30px;
+        }
+
+        .body h2 {
+            font-size: 18px;
+            margin-top: 0;
+        }
+
+        .report-box {
+            background-color: #f1f1f1;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 20px 0;
+            color: #555;
+        }
+
+        .report-details {
+            margin-top: 10px;
+        }
+
+        .report-detail {
+            display: flex;
+            margin-bottom: 8px;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            min-width: 100px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            padding: 20px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background-color: #3e8e41;
+        }
+
+        .location-icon {
+            color: #4CAF50;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="email-content">
+        <div class="header">
+            <h1>Nuevo reporte cerca de ti</h1>
+        </div>
+        <div class="body">
+            <h2>¡Hola ${username}!</h2>
+            <p>Se ha publicado un nuevo reporte cerca de tu ubicación:</p>
+
+            <div class="report-box">
+                <h3>${reportTitle}</h3>
+                <div class="report-details">
+                    <div class="report-detail">
+                        <span class="detail-label">Descripción:</span>
+                        <span>${reportDescription}</span>
+                    </div>
+                </div>
+            </div>
+
+            <p>Puedes acceder a la plataforma para ver más detalles o interactuar con este reporte.</p>
+
+            <p style="text-align: center;">
+                <a href="http://localhost:4200/map" class="button">Ver reporte en el mapa</a>
+            </p>
+        </div>
+        <div class="footer">
+            Este es un mensaje automático. Por favor no responder a este correo.
+            <br>© 2025 MapSphere. Todos los derechos reservados.
+        </div>
+    </div>
+</div>
+</body>
+</html>

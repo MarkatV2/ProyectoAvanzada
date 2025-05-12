@@ -46,6 +46,9 @@ public interface CategoryService {
     void deactivateCategory(String id);
 
     @PreAuthorize("hasRole('ADMIN')")
+    boolean toggleCategoryActivation(String id);
+
+    @PreAuthorize("hasRole('ADMIN')")
     List<CategoryResponse> findAllCategories();
 
     CategoryResponse getCategoryById(String id);

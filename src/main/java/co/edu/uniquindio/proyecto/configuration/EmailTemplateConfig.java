@@ -52,6 +52,11 @@ public class EmailTemplateConfig {
         return cargarPlantilla("templates/comment_notification.html");
     }
 
+    @Bean
+    public String reportNotificationEmailTemplate() {
+        return cargarPlantilla("templates/report-notification.html");
+    }
+
     /**
      * Método utilitario para cargar el contenido de un archivo HTML desde el classpath.
      * <p>

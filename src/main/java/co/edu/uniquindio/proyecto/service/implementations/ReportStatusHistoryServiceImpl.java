@@ -129,11 +129,29 @@ public class ReportStatusHistoryServiceImpl implements ReportStatusHistoryServic
      * @return Lista paginada filtrada por estado anterior.
      */
     @Override
-    public PaginatedHistoryResponse getHistoryByPreviousStatus(String reportId, ReportStatus previousStatus, int page, int size) {
+    public PaginatedHistoryResponse getHistoryByPreviousStatusAndReportId(String reportId, ReportStatus previousStatus, int page, int size) {
         log.info("Historial filtrado por estado anterior '{}' para reporte {}. Página: {}, Tamaño: {}", previousStatus, reportId, page, size);
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<ReportStatusHistory> result =
                 historyRepository.findByReportIdAndPreviousStatus(new ObjectId(reportId), previousStatus, pageable);
+        return toPaginatedHistoryResponse(result, page, size);
+    }
+
+    @Override
+    public PaginatedHistoryResponse getHistoryByPreviousStatus(ReportStatus previousStatus, int page, int size) {
+        log.info("Historial filtrado por estado anterior '{}' Página: {}, Tamaño: {}", previousStatus, page, size);
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<ReportStatusHistory> result =
+                historyRepository.findByPreviousStatus(previousStatus, pageable);
+        return toPaginatedHistoryResponse(result, page, size);
+    }
+
+    @Override
+    public PaginatedHistoryResponse getHistoryByNewStatus(ReportStatus newStatus, int page, int size) {
+        log.info("Historial filtrado por estado anterior '{}' Página: {}, Tamaño: {}", newStatus, page, size);
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<ReportStatusHistory> result =
+                historyRepository.findByNewStatus(newStatus, pageable);
         return toPaginatedHistoryResponse(result, page, size);
     }
 

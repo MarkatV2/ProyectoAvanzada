@@ -96,14 +96,33 @@ public class ReportStatusHistoryController {
      * @return Lista paginada de {@link ReportStatusHistoryResponse} filtrada por estado anterior.
      */
     @GetMapping("/by-report/previous-status")
-    public ResponseEntity<PaginatedHistoryResponse> getByPreviousStatus(
+    public ResponseEntity<PaginatedHistoryResponse> getByPreviousStatusAndReportId(
             @RequestParam String reportId,
             @RequestParam ReportStatus previousStatus,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         log.info("⏪ Historial del reporte {} filtrado por estado anterior {} (página {}, tamaño {})",
                 reportId, previousStatus, page, size);
-        return ResponseEntity.ok(historyService.getHistoryByPreviousStatus(reportId, previousStatus, page, size));
+        return ResponseEntity.ok(historyService.getHistoryByPreviousStatusAndReportId(reportId, previousStatus, page, size));
+    }
+
+
+    @GetMapping("/by-previous-status")
+    public ResponseEntity<PaginatedHistoryResponse> getByPreviousStatus(
+            @RequestParam ReportStatus previousStatus,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("⏪filtrado por estado anterior {} (página {}, tamaño {})", previousStatus, page, size);
+        return ResponseEntity.ok(historyService.getHistoryByPreviousStatus(previousStatus, page, size));
+    }
+
+    @GetMapping("/by-new-satatus")
+    public ResponseEntity<PaginatedHistoryResponse> getByNewStatus(
+            @RequestParam ReportStatus newStatus,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("⏪filtrado por estado anterior {} (página {}, tamaño {})", newStatus, page, size);
+        return ResponseEntity.ok(historyService.getHistoryByNewStatus(newStatus, page, size));
     }
 
 

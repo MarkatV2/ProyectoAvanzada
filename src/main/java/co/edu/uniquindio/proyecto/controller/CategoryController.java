@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controlador REST para la gestión de categorías.
@@ -114,17 +116,17 @@ public class CategoryController {
     }
 
     /**
-     * Desactiva (elimina lógicamente) una categoría existente (requiere rol ADMIN).
+     * Alterna el estado de activación de una categoría existente (requiere rol ADMIN).
      *
-     * @param categoryId ID de la categoría a desactivar.
-     * @return HTTP 204 sin contenido.
+     * @param categoryId ID de la categoría a alternar
+     * @return Respuesta con el nuevo estado de activación y código HTTP 200
      */
-    @DeleteMapping("/{categoryId}")
-    public ResponseEntity<Void> deactivateCategory(@PathVariable String categoryId) {
-        log.info("⛔ Solicitando desactivación de categoría con ID: {}", categoryId);
-        categoryService.deactivateCategory(categoryId);
-        log.info("🗑️ Categoría desactivada con éxito: {}", categoryId);
-        return ResponseEntity.noContent().build();
-    }
+    @PatchMapping("/{categoryId}/toggle-activated")
+    public ResponseEntity<Map<String, Boolean>> toggleCategoryActivation(@PathVariable String categoryId) {
+        log.info("🔄 Solicitando cambio de estado de categoría con ID: {}", categoryId);
+        boolean newStatus = categoryService.toggleCategoryActivation(categoryId);
+        log.info("✅ Estado de categoría actualizado. ID: {}, Nuevo estado: {}", categoryId, newStatus ? "Activada" : "Desactivada");
 
+        return ResponseEntity.ok(Collections.singletonMap("activated", newStatus));
+    }
 }

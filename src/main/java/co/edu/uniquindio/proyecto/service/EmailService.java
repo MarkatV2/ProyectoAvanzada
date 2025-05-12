@@ -16,15 +16,18 @@ public class EmailService {
     private final String verificationTemplate;
     private final String resetPasswordTemplate;
     private final String commentTemplate;
+    private final String reportTemplate;
 
     public EmailService(JavaMailSender mailSender,
                         @Value("#{@verificationEmailTemplate}") String verificationTemplate,
                         @Value("#{@resetPasswordEmailTemplate}") String resetPasswordTemplate,
-                        @Value("#{@commentNotificationEmailTemplate}") String commentTemplate) {
+                        @Value("#{@commentNotificationEmailTemplate}") String commentTemplate,
+                        @Value("#{@reportNotificationEmailTemplate}") String reportTemplate) {
         this.mailSender = mailSender;
         this.verificationTemplate = verificationTemplate;
         this.resetPasswordTemplate = resetPasswordTemplate;
         this.commentTemplate = commentTemplate;
+        this.reportTemplate = reportTemplate;
     }
 
     public void sendVerificationEmail(String toEmail, String code) {
@@ -47,6 +50,15 @@ public class EmailService {
                 .replace("${reportTitle}", reportTitle)
                 .replace("${commentContent}", commentContent);
         sendHtmlEmail(toEmail, "Nuevo comentario en tu reporte", content);
+    }
+
+    public void sendNearbyReportEmail(String toEmail, String username, String reportTitle,String reportDescription) {
+        String content = reportTemplate
+                .replace("${username}", username)
+                .replace("${reportTitle}", reportTitle)
+                .replace("${reportDescription}", reportDescription);
+
+        sendHtmlEmail(toEmail, "Nuevo reporte cerca de ti", content);
     }
 
     private void sendHtmlEmail(String toEmail, String subject, String html) {

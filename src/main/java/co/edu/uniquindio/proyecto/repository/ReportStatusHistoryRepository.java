@@ -59,6 +59,11 @@ public interface ReportStatusHistoryRepository extends MongoRepository<ReportSta
     @Query("{ 'reportId': ?0, 'previousStatus': ?1 }")
     Page<ReportStatusHistory> findByReportIdAndPreviousStatus(ObjectId reportId, ReportStatus previousStatus, Pageable pageable);
 
+    @Query("{'previousStatus': ?0 }")
+    Page<ReportStatusHistory> findByPreviousStatus(ReportStatus previousStatus, Pageable pageable);
+
+    @Query("{'newStatus': ?0 }")
+    Page<ReportStatusHistory> findByNewStatus(ReportStatus newStatus, Pageable pageable);
 
     /**
      * Obtiene el historial de cambios de estado de un reporte específico filtrado por el usuario que realizó el cambio.

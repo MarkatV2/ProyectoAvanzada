@@ -135,6 +135,11 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryMapper.toCategoryResponse(savedCategory);
     }
 
+    @Override
+    public void deactivateCategory(String id) {
+
+    }
+
     /**
      * Desactiva una categoría (soft delete) a partir de su ID.
      *
@@ -143,18 +148,24 @@ public class CategoryServiceImpl implements CategoryService {
      * @throws CategoryNotFoundException Si la categoría no se encuentra.
      */
     @Override
-    public void deactivateCategory(String id) {
+    public boolean toggleCategoryActivation(String id) {
         ObjectId objectId = parseObjectId(id);
         log.debug("Buscando categoría con ID: {}", id);
-        Category category = categoryRepository.findByIdAndActivatedTrue(objectId)
+
+        Category category = categoryRepository.findById(objectId)
                 .orElseThrow(() -> {
                     log.warn("Categoría no encontrada para ID: {}", id);
                     return new CategoryNotFoundException(id);
                 });
-        log.debug("Marcando la categoría con ID: {} como inactiva", id);
-        category.setActivated(false);
+
+        // Invertir el estado actual
+        boolean newStatus = !category.isActivated();
+        category.setActivated(newStatus);
+
         categoryRepository.save(category);
-        log.info("Categoría con ID: {} desactivada exitosamente", id);
+        log.info("Estado de categoría actualizado. ID: {}, Nuevo estado: {}", id, newStatus ? "Activada" : "Desactivada");
+
+        return newStatus;
     }
 
     /**

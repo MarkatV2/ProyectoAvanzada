@@ -100,7 +100,6 @@ public class ReportServiceImpl implements ReportService {
         Report savedReport = reportRepository.save(report);
         log.info("Reporte creado exitosamente con ID: {}", savedReport.getId());
 
-        nearbyNotificationService.notifyUsersNearby(savedReport);
         return reportMapper.toResponse(savedReport);
     }
 
@@ -495,6 +494,9 @@ public class ReportServiceImpl implements ReportService {
         // Actualizar estado y guardar el reporte
         report.setReportStatus(newStatus);
         reportRepository.save(report);
+
+        if (newStatus == ReportStatus.VERIFIED) nearbyNotificationService.notifyUsersNearby(report);
+
         log.info("Estado del reporte {} actualizado a {}", report.getId(), newStatus);
     }
 

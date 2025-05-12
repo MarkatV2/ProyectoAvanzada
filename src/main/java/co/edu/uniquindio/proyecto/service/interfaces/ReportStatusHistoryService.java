@@ -19,7 +19,13 @@ public interface ReportStatusHistoryService {
     ReportStatusHistoryResponse getHistoryById(String historyId);
     PaginatedHistoryResponse getHistoryByReportId(String reportId, int page, int size);
     PaginatedHistoryResponse getHistoryByUserId(String userId, int page, int size);
-    PaginatedHistoryResponse getHistoryByPreviousStatus(String reportId, ReportStatus previousStatus, int page, int size);
+
+    PaginatedHistoryResponse getHistoryByPreviousStatusAndReportId(String reportId, ReportStatus previousStatus, int page, int size);
+
+    PaginatedHistoryResponse getHistoryByPreviousStatus(ReportStatus previousStatus, int page, int size);
+
+    PaginatedHistoryResponse getHistoryByNewStatus(ReportStatus newStatus, int page, int size);
+
     PaginatedHistoryResponse getHistoryByNewStatusAndDateRange(
             String reportId, ReportStatus newStatus, LocalDateTime startDate, LocalDateTime endDate, int page, int size);
     long countHistoryByReportId(String reportId);

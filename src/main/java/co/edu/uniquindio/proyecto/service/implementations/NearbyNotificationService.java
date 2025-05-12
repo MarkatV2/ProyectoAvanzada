@@ -4,6 +4,7 @@ import co.edu.uniquindio.proyecto.dto.notification.NotificationCreateDTO;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import co.edu.uniquindio.proyecto.entity.user.User;
 import co.edu.uniquindio.proyecto.repository.UserRepository;
+import co.edu.uniquindio.proyecto.service.EmailService;
 import co.edu.uniquindio.proyecto.service.interfaces.NotificationService;
 import co.edu.uniquindio.proyecto.service.mapper.NotificationMapper;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class NearbyNotificationService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final NotificationMapper notificationMapper;
+    private final EmailService emailService;
 
     /**
      * Notifica a todos los usuarios que estén dentro del radio definido respecto al nuevo reporte.
@@ -49,11 +51,24 @@ public class NearbyNotificationService {
 
         log.info("Usuarios a notificar por cercanía: {}", nearbyUsers.size());
 
+
         for (User user : nearbyUsers) {
             try {
+                // Notificación SSE
                 NotificationCreateDTO dto = notificationMapper.buildFromReportForNearbyUser(report, user.getId().toString());
                 notificationService.notifyUser(dto);
-                log.debug("Notificación enviada al usuario con ID: {}", user.getId());
+                log.debug("Notificación SSE enviada al usuario con ID: {}", user.getId());
+
+                // Notificación por email
+                emailService.sendNearbyReportEmail(
+                        user.getEmail(),
+                        user.getFullName(),
+                        report.getTitle(),
+                        report.getDescription()
+                );
+
+                log.debug("Email de notificación enviado a: {}", user.getEmail());
+
             } catch (Exception ex) {
                 log.error("Error al notificar al usuario con ID: {}", user.getId(), ex);
             }
@@ -61,6 +76,7 @@ public class NearbyNotificationService {
 
         log.info("Proceso de notificación por cercanía finalizado para el reporte {}", report.getId());
     }
+
 
     /**
      * Determina si una ubicación se encuentra dentro del radio especificado.
