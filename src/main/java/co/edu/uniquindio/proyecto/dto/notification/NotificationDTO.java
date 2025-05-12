@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
  * Se transmite típicamente por WebSocket o listado en el historial de notificaciones.
  */
 public record NotificationDTO(
+        String id,
         String title,
         String message,
         String reportId,

@@ -73,7 +73,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse getCategoryById(String id) {
         ObjectId objectId = parseObjectId(id);
         log.debug("Buscando categoría con ID: {}", id);
-        Category category = categoryRepository.findByIdAndActivatedTrue(objectId)
+        Category category = categoryRepository.findById(objectId)
                 .orElseThrow(() -> {
                     log.warn("Categoría no encontrada para ID: {}", id);
                     return new CategoryNotFoundException(id);

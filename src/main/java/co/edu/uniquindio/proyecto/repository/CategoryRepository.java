@@ -29,6 +29,7 @@ public interface CategoryRepository extends MongoRepository<Category, ObjectId> 
      */
     Optional<Category> findByIdAndActivatedTrue(ObjectId objectId);
 
+
     /**
      * Verifica si existe una categoría con un nombre específico.
      *

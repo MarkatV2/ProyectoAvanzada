@@ -1,7 +1,7 @@
 package co.edu.uniquindio.proyecto.exceptionhandler.notification;
 
 import co.edu.uniquindio.proyecto.exception.notification.EmailNotificationException;
-import co.edu.uniquindio.proyecto.exception.notification.WebSocketNotificationException;
+import co.edu.uniquindio.proyecto.exception.notification.SseNotificationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  *
  * <p>Excepciones manejadas:</p>
  * <ul>
- *   <li>{@link WebSocketNotificationException} - Cuando falla el envío por WebSocket.</li>
  *   <li>{@link EmailNotificationException} - Cuando falla el envío por correo electrónico.</li>
  * </ul>
  */
@@ -33,8 +32,8 @@ public class NotificationExceptionHandler {
      * @param ex la excepción que fue lanzada
      * @return una respuesta HTTP 500 con un mensaje genérico de error
      */
-    @ExceptionHandler(WebSocketNotificationException.class)
-    public ResponseEntity<String> handleWebSocketError(WebSocketNotificationException ex) {
+    @ExceptionHandler(SseNotificationException.class)
+    public ResponseEntity<String> handleWebSocketError(SseNotificationException ex) {
         log.warn("Excepción WebSocket: {}", ex.getMessage(), ex);
         return ResponseEntity.internalServerError().body("Error enviando notificación WebSocket.");
     }

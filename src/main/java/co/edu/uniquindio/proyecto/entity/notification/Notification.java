@@ -8,6 +8,8 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.time.LocalDateTime;
 
@@ -24,6 +26,10 @@ public class Notification {
     private String userId; // ID del receptor de la notificación
 
     private String title;
+
+    @Field(targetType = FieldType.BOOLEAN)
+    private boolean delivered = false;
+
     private String message;
     private String reportId; // Si está asociada a un reporte
     private NotificationType type;
@@ -34,6 +40,4 @@ public class Notification {
 
     private LocalDateTime createdAt;
 
-    // Si necesitas un constructor público, puedes usar @AllArgsConstructor
-    // y Lombok generará un constructor adecuado.
 }

@@ -4,7 +4,7 @@ import co.edu.uniquindio.proyecto.dto.notification.NotificationCreateDTO;
 import co.edu.uniquindio.proyecto.entity.comment.Comment;
 import co.edu.uniquindio.proyecto.entity.report.Report;
 import co.edu.uniquindio.proyecto.exception.notification.EmailNotificationException;
-import co.edu.uniquindio.proyecto.exception.notification.WebSocketNotificationException;
+import co.edu.uniquindio.proyecto.exception.notification.SseNotificationException;
 import co.edu.uniquindio.proyecto.service.EmailService;
 import co.edu.uniquindio.proyecto.service.interfaces.NotificationService;
 import co.edu.uniquindio.proyecto.service.mapper.NotificationMapper;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
  *
  * <p>En caso de errores al enviar la notificación, se lanzan excepciones personalizadas:
  * <ul>
- *     <li>{@link WebSocketNotificationException} si ocurre un fallo al notificar por WebSocket.</li>
  *     <li>{@link EmailNotificationException} si ocurre un fallo al enviar el correo electrónico.</li>
  * </ul>
  * </p>
@@ -50,7 +49,6 @@ public class CommentNotificationService {
      * @param comment        Comentario creado.
      * @param report         Reporte al que pertenece el comentario.
      * @param commenterName  Nombre del usuario que hizo el comentario.
-     * @throws WebSocketNotificationException si ocurre un error enviando la notificación por WebSocket
      * @throws EmailNotificationException     si ocurre un error enviando la notificación por correo electrónico
      */
     public void notifyOwner(Comment comment, Report report, String commenterName) {
@@ -64,7 +62,7 @@ public class CommentNotificationService {
         try {
             notificationService.notifyUser(dto);
         } catch (Exception e) {
-            throw new WebSocketNotificationException(
+            throw new SseNotificationException(
                     "Error al enviar notificación WebSocket al usuario con ID: " + report.getUserId(), e);
         }
 

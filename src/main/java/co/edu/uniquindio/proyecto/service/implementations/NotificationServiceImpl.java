@@ -4,13 +4,16 @@ import co.edu.uniquindio.proyecto.controller.NotificationSseController;
 import co.edu.uniquindio.proyecto.dto.notification.NotificationCreateDTO;
 import co.edu.uniquindio.proyecto.dto.notification.NotificationDTO;
 import co.edu.uniquindio.proyecto.entity.notification.Notification;
-import co.edu.uniquindio.proyecto.exception.notification.WebSocketNotificationException;
+import co.edu.uniquindio.proyecto.exception.notification.SseNotificationException;
 import co.edu.uniquindio.proyecto.repository.NotificationRepository;
 import co.edu.uniquindio.proyecto.service.interfaces.NotificationService;
 import co.edu.uniquindio.proyecto.service.mapper.NotificationMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Servicio responsable de crear y enviar notificaciones a usuarios.
@@ -38,6 +41,7 @@ public class NotificationServiceImpl implements NotificationService {
         try {
             // Mapear DTO a entidad
             Notification notification = notificationMapper.fromCreateDTO(createDTO);
+            notification.setDelivered(false);
 
             // Guardar en base de datos
             Notification saved = notificationRepository.save(notification);
@@ -46,13 +50,21 @@ public class NotificationServiceImpl implements NotificationService {
             // Mapear a DTO para envío
             NotificationDTO dto = notificationMapper.toDTO(saved);
 
-            // Enviar por WebSocket
-            notificationSseController.sendNotification(createDTO.userId(), dto);
-            log.info("Notificación enviada al usuario {}", createDTO.userId());
+            // Intentar enviar por SSE
+            boolean delivered = notificationSseController.sendNotification(createDTO.userId(), dto);
+
+            if (delivered) {
+                saved.setDelivered(true);
+                notificationRepository.save(saved);
+                log.info("Notificación entregada al usuario {}", createDTO.userId());
+            } else {
+                log.info("Notificación guardada como pendiente para el usuario {}", createDTO.userId());
+            }
 
         } catch (Exception e) {
             log.error("Error al notificar al usuario {}: {}", createDTO.userId(), e.getMessage(), e);
-            throw new WebSocketNotificationException("Error al enviar la notificación: ", e);
+            throw new SseNotificationException("Error al enviar la notificación SSE: ", e);
         }
     }
+
 }
