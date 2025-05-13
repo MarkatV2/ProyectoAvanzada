@@ -41,7 +41,6 @@ public class NotificationServiceImpl implements NotificationService {
         try {
             // Mapear DTO a entidad
             Notification notification = notificationMapper.fromCreateDTO(createDTO);
-            notification.setDelivered(false);
 
             // Guardar en base de datos
             Notification saved = notificationRepository.save(notification);

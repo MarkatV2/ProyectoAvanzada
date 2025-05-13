@@ -117,7 +117,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse updateCategory(String id, CategoryRequest request) {
         ObjectId objectId = parseObjectId(id);
         log.debug("Buscando categoría con ID: {}", id);
-        Category existingCategory = categoryRepository.findByIdAndActivatedTrue(objectId)
+        Category existingCategory = categoryRepository.findById(objectId)
                 .orElseThrow(() -> {
                     log.warn("Categoría no encontrada para ID: {}", id);
                     return new CategoryNotFoundException(id);
