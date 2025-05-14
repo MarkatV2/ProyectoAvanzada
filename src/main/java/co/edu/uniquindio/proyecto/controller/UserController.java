@@ -120,7 +120,7 @@ public class UserController {
     /**
      * Actualiza la contraseña del usuario autenticado.
      *
-     * @param id             ID del usuario.
+     * @param id             ID del usuario
      * @param passwordUpdate Nueva contraseña.
      * @return Confirmación de actualización.
      */
