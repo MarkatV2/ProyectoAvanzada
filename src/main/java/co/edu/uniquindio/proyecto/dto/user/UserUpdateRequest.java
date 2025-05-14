@@ -17,10 +17,6 @@ public record UserUpdateRequest(
         @NotBlank(message = "El nombre es obligatorio")
         String fullName,
 
-        @NotNull(message = "La fecha de nacimiento es obligatoria")
-        @Past(message = "La fecha de nacimiento debe ser en el pasado")
-        LocalDate dateBirth,
-
         @NotBlank(message = "La ciudad de residencia es obligatoria")
         String cityOfResidence,
 
@@ -28,7 +24,10 @@ public record UserUpdateRequest(
         double latitude,
 
         @NotNull(message = "La longitud de la dirección es obligatoria")
-        double longitude
+        double longitude,
+
+        @NotNull(message = "el radio es obligatorio")
+        double notificationRadiusKm
 
 ) {
 }
