@@ -41,21 +41,19 @@ public class SecurityConfig {
     /**
      * Configuración de CORS para que Spring Security la aplique al inicio del filter chain.
      */
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList(
-            "http://localhost:4200",
-            "https://mariamarmolejo.github.io"
-        ));
-        config.setAllowCredentials(true);
-        config.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS", "PATCH"));
-        config.setAllowedHeaders(Collections.singletonList("*"));
+   @Bean
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOrigins(Collections.singletonList("https://mariamarmolejo.github.io"));
+    config.setAllowCredentials(true);
+    config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    config.setAllowedHeaders(Collections.singletonList("*"));
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
+}
+
 
     /**
      * Única cadena de seguridad: CORS, CSRF off, stateless, autorización, filtros y resource server.

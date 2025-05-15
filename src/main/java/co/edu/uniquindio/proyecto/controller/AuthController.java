@@ -191,9 +191,9 @@ public class AuthController {
     log.debug("🔧 Construyendo cookie '{}', duración {} segundos", name, maxAge.getSeconds());
     return ResponseCookie.from(name, value)
         .httpOnly(true)
-        //.secure(true)
+        .secure(true)
         .path("/")
-        .sameSite("Strict")
+        .sameSite("None")
         .maxAge(maxAge)
         .build();
   }
