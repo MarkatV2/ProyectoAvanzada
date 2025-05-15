@@ -44,7 +44,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+        config.setAllowedOrigins(Arrays.asList(
+            "http://localhost:4200",
+            "https://mariamarmolejo.github.io"
+        ));
         config.setAllowCredentials(true);
         config.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS", "PATCH"));
         config.setAllowedHeaders(Collections.singletonList("*"));
