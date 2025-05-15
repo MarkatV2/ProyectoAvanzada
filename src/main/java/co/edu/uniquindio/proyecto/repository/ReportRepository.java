@@ -44,10 +44,10 @@ public interface ReportRepository extends MongoRepository<Report, ObjectId> {
     Page<Report> findAllReports(Pageable pageable);
 
 
-    @Query("""
-            {'userId': ?1, 'reportStatus': { $ne: 'DELETED'}}""")
-    Page<Report> findAllReportsByUserId(Pageable pageable, ObjectId userId);
-
+ // Versión corregida
+    @Query("{ 'userId': ?0, 'reportStatus': { $ne: 'DELETED' } }")
+    Page<Report> findAllReportsByUserId(ObjectId userId, Pageable pageable);
+    
     /**
      * Busca los reportes cercanos a una ubicación específica, dentro de una distancia máxima.
      * La búsqueda es realizada usando la indexación geoespacial 2DSPHERE en MongoDB.

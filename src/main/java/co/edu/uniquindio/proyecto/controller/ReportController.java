@@ -178,11 +178,12 @@ public class ReportController {
      * @return HTTP 204 si se alternó correctamente.
      */
     @PatchMapping("/{reportId}/votes")
-    public ResponseEntity<Void> toggleVote(@PathVariable String reportId) {
+    public ResponseEntity<Boolean> toggleVote(@PathVariable String reportId) {
         log.debug("👍 Alternando voto para el reporte {}", reportId);
-        reportService.toggleReportVote(reportId);
-        return ResponseEntity.noContent().build();
+        boolean isVoted = reportService.toggleReportVote(reportId);
+        return ResponseEntity.ok(isVoted);
     }
+
 
     /**
      * Obtiene todas las imágenes asociadas a un reporte.

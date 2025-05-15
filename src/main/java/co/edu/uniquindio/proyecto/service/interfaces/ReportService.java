@@ -83,7 +83,7 @@ public interface ReportService {
      *
      * @param reportId ID del reporte.
      */
-    void toggleReportVote(String reportId);
+    boolean toggleReportVote(String reportId);
 
     /**
      * Obtiene los comentarios asociados a un reporte de forma paginada.

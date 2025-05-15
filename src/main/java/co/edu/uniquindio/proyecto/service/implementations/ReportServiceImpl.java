@@ -195,7 +195,7 @@ public class ReportServiceImpl implements ReportService {
 
         ObjectId userId = new ObjectId(securityUtils.getCurrentUserId());
         // Asegúrate de que tu repositorio acepte Pageable
-        Page<Report> reportsPage = reportRepository.findAllReportsByUserId(pageable, userId);
+        Page<Report> reportsPage = reportRepository.findAllReportsByUserId(userId, pageable);
 
         log.info("Se encontraron {} reportes (total páginas: {})",
                 reportsPage.getTotalElements(), reportsPage.getTotalPages());
@@ -321,7 +321,7 @@ public class ReportServiceImpl implements ReportService {
      */
     @Transactional
     @Override
-    public void toggleReportVote(String reportId) {
+    public boolean toggleReportVote(String reportId) {
         log.info("Iniciando toggle de voto para reporte con ID: {}", reportId);
 
         // Obtener reporte
@@ -330,10 +330,13 @@ public class ReportServiceImpl implements ReportService {
         String currentUserId = securityUtils.getCurrentUserId();
         ObjectId userObjectId = parseObjectId(currentUserId);
 
-        // Alternar voto
-        updateVoteStatus(report, userObjectId);
+        // Alternar voto y obtener el nuevo estado
+        boolean isNowVoted = updateVoteStatus(report, userObjectId);
 
-        log.info("Reporte {} actualizado. Votos importantes actuales: {}", reportId, report.getImportantVotes());
+        log.info("Reporte {} actualizado. Votos importantes actuales: {}. El usuario {} votado = {}",
+                reportId, report.getImportantVotes(), currentUserId, isNowVoted);
+
+        return isNowVoted;
     }
 
 
@@ -509,24 +512,25 @@ public class ReportServiceImpl implements ReportService {
      * @param report        El reporte sobre el que se va a actualizar el voto.
      * @param userObjectId El ID del usuario que está realizando la acción.
      */
-    private void updateVoteStatus(Report report, ObjectId userObjectId) {
-        log.info("Actualizando voto del usuario {} para el reporte {}", userObjectId, report.getId());
+    private boolean updateVoteStatus(Report report, ObjectId userObjectId) {
+    Set<ObjectId> likedUserIds = getLikedUserIds(report);
 
-        // Obtener los usuarios que ya han votado
-        Set<ObjectId> likedUserIds = getLikedUserIds(report);
-
-        if (likedUserIds.contains(userObjectId)) {
-            // El usuario ya ha votado: quitar su voto
-            removeVote(report, likedUserIds, userObjectId);
-        } else {
-            // El usuario no ha votado: agregar su voto
-            addVote(report, likedUserIds, userObjectId);
-        }
-
-        // Guardar el reporte actualizado
-        reportRepository.save(report);
-        log.info("Reporte {} actualizado. Votos importantes: {}", report.getId(), report.getImportantVotes());
+    boolean isNowVoted;
+    if (likedUserIds.contains(userObjectId)) {
+        // Ya había votado → quitar voto
+        removeVote(report, likedUserIds, userObjectId);
+        isNowVoted = false;
+    } else {
+        // No había votado → agregar voto
+        addVote(report, likedUserIds, userObjectId);
+        isNowVoted = true;
     }
+
+    // Guardar el reporte con el conteo actualizado
+    reportRepository.save(report);
+    return isNowVoted;
+}
+
 
 
     /**
